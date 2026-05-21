@@ -1,0 +1,14 @@
+extractor:
+  url: "https://api.stlouisfed.org/fred/series/observations"
+  query_params:
+    series_id: "FEDFUNDS"
+    file_type: "json"
+  headers: ~
+
+transformer: ~
+
+writer:
+  format: iceberg
+  mode: append
+  partition_by: load_prdt
+  table: bronze.fred_interest_rates

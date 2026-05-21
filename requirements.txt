@@ -2,3 +2,4 @@ pyspark==3.5.0
 python-dotenv==1.2.1
 pytest==9.0.2
 requests==2.33.1
+PyYAML==6.0.3

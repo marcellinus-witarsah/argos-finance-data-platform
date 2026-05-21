@@ -1,0 +1,13 @@
+extractor:
+  url: "https://www.alphavantage.co/query"
+  query_params:
+    function": "DIGITAL_CURRENCY_DAILY"
+  headers: ~
+
+transformer: ~
+
+writer:
+  format: iceberg
+  mode: append
+  partition_by: load_prdt
+  table: bronze.alpha_vantage_crypto_ohlcv
