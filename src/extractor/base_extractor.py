@@ -8,6 +8,7 @@
 from abc import ABC, abstractmethod
 from src.utils.context import PipelineContext
 
+
 class BaseExtractor(ABC):
     def __init__(self, ctx: PipelineContext, cfg: dict):
         self.ctx = ctx

@@ -8,7 +8,9 @@ extractor:
 transformer: ~
 
 writer:
+  catalog: argos_finance_catalog
+  schema: bronze 
   format: iceberg
   mode: append
   partition_by: load_prdt
-  table: bronze.fred_interest_rates
+  table: interest_rates
