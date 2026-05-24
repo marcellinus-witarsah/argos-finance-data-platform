@@ -1,0 +1,14 @@
+extractor:
+  catalog: argos_finance_catalog
+  schema: bronze 
+  table: [interest_rates]
+
+transformer: ~
+
+writer:
+  catalog: argos_finance_catalog
+  schema: silver 
+  format: iceberg
+  mode: merge
+  merge_column: [date]
+  table: interest_rates

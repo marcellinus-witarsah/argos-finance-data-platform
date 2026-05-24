@@ -1,26 +1,26 @@
-from pyspark.sql import DataFrame
-from pyspark.sql.types import StructType, StructField, StringType
-from pyspark.sql.functions import to_date, current_timestamp
-from src.pipeline.base_pipeline import BasePipeline
-from src.strategy.parser.parser_context import ParserContext
-from src.strategy.parser.yaml_parser_strategy import YAMLParserStrategy
-from src.strategy.hasher.hasher_context import HasherContext
-from src.strategy.hasher.md5_hasher_strategy import MD5HasherStrategy
-from typing import Any
-import os
+import argparse
 import json
-from src.utils.context import PipelineContext
-from src.utils.logger import logger
-from pyspark.sql import SparkSession
+import os
+from typing import Any
+
 import requests
+from dotenv import load_dotenv
+from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql.functions import current_timestamp, to_date
+from pyspark.sql.types import StringType, StructField, StructType
 
 from src.extractor.api_extractor import APIExtractor
-import argparse
-from dotenv import load_dotenv
+from src.pipeline.base_pipeline import BasePipeline
+from src.strategy.hasher.hasher_context import HasherContext
+from src.strategy.hasher.md5_hasher_strategy import MD5HasherStrategy
+from src.strategy.parser.parser_context import ParserContext
+from src.strategy.parser.yaml_parser_strategy import YAMLParserStrategy
+from src.utils.context import PipelineContext
+from src.utils.logger import logger
 from src.writer.iceberg_writer import IcebergWriter
 
 
-class AlphaVantageCryptoOHLCVPipeline(BasePipeline):
+class DataPipeline(BasePipeline):
     def extract(self) -> dict[str, Any]:
         """Return named DataFrames. Keys are used in transform()."""
         data = self.extractor.extract()
@@ -29,7 +29,7 @@ class AlphaVantageCryptoOHLCVPipeline(BasePipeline):
     def transform(self, sources: dict[str, Any]) -> dict[str, DataFrame]:
         """Custom Spark logic. Return named output DataFrames."""
         data = sources["data"]
-        hasher_context = HasherContext(strategy=MD5HasherStrategy())
+        hasher_context = HasherContext(strategy=MD5HasherStrategy(logger))
         id = hasher_context.hash(json.dumps(data))
 
         query_params = self.cfg["extractor"]["query_params"]
@@ -49,7 +49,6 @@ class AlphaVantageCryptoOHLCVPipeline(BasePipeline):
                 ]
             ),
         )
-
         load_dttm = current_timestamp()
         df = df.withColumn("load_dttm", load_dttm)
         df = df.withColumn("load_prdt", to_date(load_dttm))
@@ -59,12 +58,6 @@ class AlphaVantageCryptoOHLCVPipeline(BasePipeline):
     def write(self, output: dict[str, DataFrame]) -> None:
         """Write each output to its sink."""
         self.writer.write(output)
-
-    def run(self) -> None:
-        sources = self.extract()
-        output = self.transform(sources)
-        print(output)
-        self.write(output)
 
 
 if __name__ == "__main__":
@@ -77,8 +70,8 @@ if __name__ == "__main__":
     parameters = parser.parse_args()
 
     # Parse configuration file
-    yaml_parser = ParserContext(YAMLParserStrategy())
-    cfg = yaml_parser.parse("./configs/api2bronze/alpha_vantage_crypto_ohlcv/alpha_vantage_crypto_ohlcv.yaml")
+    yaml_parser = ParserContext(YAMLParserStrategy(logger))
+    cfg = yaml_parser.parse("./configs/api2bronze/alpha_vantage_crypto_ohlcv.yaml")
 
     # Create context to be passed down to whole data pipeline
     ctx = PipelineContext(
@@ -102,7 +95,7 @@ if __name__ == "__main__":
     iceberg_writer = IcebergWriter(ctx, cfg_writer)
 
     # Create data pipeline and run it
-    data_pipeline = AlphaVantageCryptoOHLCVPipeline(
+    data_pipeline = DataPipeline(
         ctx=ctx, extractor=api_extractor, writer=iceberg_writer, cfg=cfg
     )
 

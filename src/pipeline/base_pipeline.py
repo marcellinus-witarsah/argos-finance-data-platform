@@ -7,7 +7,13 @@ from src.writer.base_writer import BaseWriter
 from typing import Any
 
 class BasePipeline(ABC):
-    def __init__(self, ctx: PipelineContext, extractor: BaseExtractor, writer: BaseWriter, cfg: dict):
+    def __init__(
+        self,
+        ctx: PipelineContext,
+        extractor: BaseExtractor,
+        writer: BaseWriter,
+        cfg: dict,
+    ):
         self.spark = ctx.spark
         self.logger = ctx.logger
         self.session = ctx.session
@@ -32,5 +38,5 @@ class BasePipeline(ABC):
 
     def run(self) -> None:
         sources = self.extract()
-        outputs = self.transform(sources)
-        self.write(outputs)
+        output = self.transform(sources)
+        self.write(output)

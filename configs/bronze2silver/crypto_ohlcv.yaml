@@ -1,0 +1,14 @@
+extractor:
+  catalog: argos_finance_catalog
+  schema: bronze 
+  table: [alpha_vantage_crypto_ohlcv]
+
+transformer: ~
+
+writer:
+  catalog: argos_finance_catalog
+  schema: silver 
+  format: iceberg
+  mode: merge
+  merge_column: [date]
+  table: crypto_ohlcv
