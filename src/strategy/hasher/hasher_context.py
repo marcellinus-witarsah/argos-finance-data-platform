@@ -1,5 +1,6 @@
 from src.strategy.hasher.base_hasher_startegy import BaseHasherStrategy
 
+
 class HasherContext:
     def __init__(self, strategy: BaseHasherStrategy):
         self._strategy = strategy
