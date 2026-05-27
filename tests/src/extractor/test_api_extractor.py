@@ -20,7 +20,7 @@ class MockResponse:
 class TestAPIExtractor(TestCase):
     def setUp(self):
         """A function that always runs at the start of unit test."""
-        self.mock_session = mock.Mock()
+        self.mock_session = mock.Mock(spec=requests.Session)
         self.mock_url = "https://www.alphavantage.co/query"
         self.mock_query_params = {                                                                                                       
             "function": "DIGITAL_CURRENCY_DAILY",                                                                                        

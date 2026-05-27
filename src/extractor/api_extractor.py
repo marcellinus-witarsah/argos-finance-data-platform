@@ -1,5 +1,4 @@
 from src.extractor.base_extractor import BaseExtractor
-from typing import Any
 import requests
 from src.utils.logger import logger
 
@@ -14,5 +13,5 @@ class APIExtractor(BaseExtractor):
             headers=headers,
         )
         response.raise_for_status()
-        logger.info(f"Extracted data via API from {url} successfull.")
+        logger.info(f"Extracted data via API successfull.")
         return response.json()
