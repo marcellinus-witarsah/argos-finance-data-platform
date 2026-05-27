@@ -6,17 +6,13 @@
 # ================================================================================
 
 from src.extractor.base_extractor import BaseExtractor
-
+from pyspark.sql import SparkSession, DataFrame
+from src.utils.logger import logger
 
 class DataframeExtractor(BaseExtractor):
-
-    def extract(self):
-        catalog = self.cfg.get("catalog", "")
-        schema = self.cfg.get("schema", "")
-        tables = self.cfg.get("table", [])
-        data = {}
-        for table in tables:
-            df = self.ctx.spark.read.table(f"{catalog}.{schema}.{table}")
-            data[f"{schema}_{table}"] = df
-            self.ctx.logger.info(f"Extract data from {catalog}.{schema}.{table} table")
-        return data
+    @staticmethod
+    def extract(spark: SparkSession, catalog: str, schema: str, table: str) -> DataFrame:
+        logger.info(f"Extracting data via Spark table read to {catalog}.{schema}.{table}.")
+        df = spark.read.table(f"{catalog}.{schema}.{table}")
+        logger.info(f"Extracted data via via Spark table successfull.")
+        return df
