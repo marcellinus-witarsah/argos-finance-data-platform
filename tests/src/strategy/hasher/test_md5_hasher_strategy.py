@@ -12,10 +12,9 @@ class TestMD5HasherStrategy(unittest.TestCase):
         mock_invalid_type = 12345
 
         md5_hasher_strategy = self.__make_md5_hasher_strategy()
-        
+
         with self.assertRaises(AttributeError):
             md5_hasher_strategy.hash(mock_invalid_type)
-
 
     def test_if_valid_string_returns_correct_md5_hash(self):
         mock_data = "mock_data"

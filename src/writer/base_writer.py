@@ -6,14 +6,8 @@
 # ================================================================================
 
 from abc import ABC, abstractmethod
-from src.utils.context import PipelineContext
-
 
 class BaseWriter(ABC):
-    def __init__(self, ctx: PipelineContext, cfg: dict):
-        self.ctx = ctx
-        self.cfg = cfg
-
     @abstractmethod
     def write(self):
         raise NotImplementedError("Please implement this method")
