@@ -6,6 +6,7 @@ from src.extractor.base_extractor import BaseExtractor
 from src.writer.base_writer import BaseWriter
 from typing import Any
 
+
 class BasePipeline(ABC):
     def __init__(
         self,
