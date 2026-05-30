@@ -1,6 +1,7 @@
 import yaml
 from src.strategy.parser.base_parser_strategy import BaseParserStrategy
 
+
 class YAMLParserStrategy(BaseParserStrategy):
     def parse(self, filepath: str) -> dict:
         try:

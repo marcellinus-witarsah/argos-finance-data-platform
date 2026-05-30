@@ -6,49 +6,67 @@
 # ================================================================================
 
 from src.writer.base_writer import BaseWriter
-from pyspark.sql import SparkSession, DataFrame, DataFrameWriterV2
+from pyspark.sql import SparkSession, DataFrame
 from src.utils.logger import logger
-from typing import Optional
+
 
 class SparkDataframeWriter(BaseWriter):
 
     FORMATS = ["iceberg", "delta"]
     MODES = ["append", "merge"]
 
-    def __init__(self, spark: SparkSession, df: DataFrame):
+    def __init__(self, spark: SparkSession):
         self.spark = spark
-        self.df = df
 
     def write(
-            self, 
-            fmt: str, 
-            table: str,
-            mode: str,
-            merge_columns: list | None = None,
-            partition_columns: list | None = None
-        ) -> None:
-        
-        if fmt not in self.FORMATS:
-            raise ValueError(f"Incorrect format. Use one of these options {','.join(self.FORMATS)}")
-        
-        if mode not in self.MODES:
-            raise ValueError(f"Incorrect mode. Use one of these options {','.join(self.MODES)}")
+        self,
+        df: DataFrame,
+        fmt: str,
+        table: str,
+        mode: str,
+        merge_columns: list | None = None,
+        partition_columns: list | None = None,
+    ) -> None:
 
-        writer = self.df.writeTo(table).using(fmt)
-        
+        if fmt not in self.FORMATS:
+            raise ValueError(
+                f"Incorrect format. Use one of these options {', '.join(self.FORMATS)}"
+            )
+
+        if mode not in self.MODES:
+            raise ValueError(
+                f"Incorrect mode. Use one of these options {', '.join(self.MODES)}"
+            )
+
+        writer = df.writeTo(table).using(fmt)
+
         if partition_columns:
+            logger.info(
+                f"Applying partition to {table} using {', '.join(partition_columns)} ..."
+            )
             writer.partitionedBy(*partition_columns)
+            logger.info(
+                f"Applied partition to{table} using {', '.join(partition_columns)} ..."
+            )
 
         if not self.spark.catalog.tableExists(table):
+            logger.info(f"Creating a {table} ...")
             writer.create()
+            logger.info(f"Created {table}.")
         else:
             if mode == "append":
+                logger.info(f"Appending Spark DataFrame records into {table} ...")
                 writer.append()
+                logger.info(f"Appended Spark DataFrame records into {table}.")
             elif mode == "merge":
-                self.__write_merge(table=table, merge_columns=merge_columns)
+                logger.info(f"Upserting Spark DataFrame records into {table} ...")
+                self.__write_merge(df=df, table=table, merge_columns=merge_columns)
+                logger.info(f"Upserted Spark DataFrame records into {table}.")
 
-    def __write_merge(self, table: str, merge_columns: list | None = None) -> None:
-        self.df.createOrReplaceTempView("source")
+    def __write_merge(
+        self, df: DataFrame, table: str, merge_columns: list | None = None
+    ) -> None:
+        df.createOrReplaceTempView("source")
         sql = f"""
             MERGE INTO {table} AS t
             USING source AS s
@@ -57,4 +75,3 @@ class SparkDataframeWriter(BaseWriter):
             WHEN NOT MATCHED THEN INSERT *
         """
         self.spark.sql(sql)
-        logger.info(f"Upsert Spark DataFrame records into {table} table.")

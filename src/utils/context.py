@@ -3,6 +3,7 @@ import logging
 from pyspark.sql import SparkSession
 import requests
 
+
 @dataclass
 class PipelineContext:
     logger: logging.Logger

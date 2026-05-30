@@ -16,17 +16,15 @@ class TestSparkDataframeWriter(unittest.TestCase):
         self.mock_df_writer_v2.append.return_value = None
         self.mock_df_writer_v2.create.return_value = None
         self.mock_df.writeTo.return_value = self.mock_df_writer_v2
-
         self.mock_df.createOrReplaceTempView.return_value = None
 
-        self.spark_dataframe_writer = SparkDataframeWriter(
-            spark=self.mock_spark, df=self.mock_df
-        )
+        self.spark_dataframe_writer = SparkDataframeWriter(self.mock_spark)
 
     def test_raises_value_error_using_incorrect_fmt_argument(self):
         """Test if it raised an error due to incorrect `fmt` argument"""
         with self.assertRaises(ValueError):
             self.spark_dataframe_writer.write(
+                df=self.mock_df,
                 fmt="incorrect",
                 table="argos_finance_catalog.silver.crypto_ohlcv",
                 mode="create",
@@ -36,6 +34,7 @@ class TestSparkDataframeWriter(unittest.TestCase):
         """Test if it raised an error due to inccorrect `mode` argument"""
         with self.assertRaises(ValueError):
             self.spark_dataframe_writer.write(
+                df=self.mock_df,
                 fmt="iceberg",
                 table="argos_finance_catalog.silver.crypto_ohlcv",
                 mode="incorect",
@@ -46,6 +45,7 @@ class TestSparkDataframeWriter(unittest.TestCase):
         """Test"""
         self.mock_spark.catalog.tableExists.return_value = False
         self.spark_dataframe_writer.write(
+            df=self.mock_df,
             fmt="iceberg",
             table="argos_finance_catalog.silver.crypto_ohlcv",
             mode="append",
@@ -58,6 +58,7 @@ class TestSparkDataframeWriter(unittest.TestCase):
     ):
         self.mock_spark.catalog.tableExists.return_value = False
         self.spark_dataframe_writer.write(
+            df=self.mock_df,
             fmt="iceberg",
             table="argos_finance_catalog.silver.crypto_ohlcv",
             mode="append",
@@ -71,6 +72,7 @@ class TestSparkDataframeWriter(unittest.TestCase):
     def test_write_function_calls_create_function(self):
         self.mock_spark.catalog.tableExists.return_value = False
         self.spark_dataframe_writer.write(
+            df=self.mock_df,
             fmt="iceberg",
             table="argos_finance_catalog.silver.crypto_ohlcv",
             mode="append",
@@ -80,6 +82,7 @@ class TestSparkDataframeWriter(unittest.TestCase):
     def test_writer_function_with_correct_format(self):
         self.mock_spark.catalog.tableExists.return_value = False
         self.spark_dataframe_writer.write(
+            df=self.mock_df,
             fmt="iceberg",
             table="argos_finance_catalog.silver.crypto_ohlcv",
             mode="append",
@@ -90,6 +93,7 @@ class TestSparkDataframeWriter(unittest.TestCase):
     def test_write_function_calls_append_function(self):
         self.mock_spark.catalog.tableExists.return_value = True
         self.spark_dataframe_writer.write(
+            df=self.mock_df,
             fmt="iceberg",
             table="argos_finance_catalog.silver.crypto_ohlcv",
             mode="append",
@@ -99,6 +103,7 @@ class TestSparkDataframeWriter(unittest.TestCase):
     def test_append_function_called_with_correct_table_argument(self):
         self.mock_spark.catalog.tableExists.return_value = True
         self.spark_dataframe_writer.write(
+            df=self.mock_df,
             fmt="iceberg",
             table="argos_finance_catalog.silver.crypto_ohlcv",
             mode="append",
@@ -110,6 +115,7 @@ class TestSparkDataframeWriter(unittest.TestCase):
     def test_append_function_called_with_correct_fmt_argument(self):
         self.mock_spark.catalog.tableExists.return_value = True
         self.spark_dataframe_writer.write(
+            df=self.mock_df,
             fmt="iceberg",
             table="argos_finance_catalog.silver.crypto_ohlcv",
             mode="append",
@@ -121,6 +127,7 @@ class TestSparkDataframeWriter(unittest.TestCase):
         "To identify if __write_merge() function is called, we can identify if the spark sql function is called through self.mock_spark that we created"
         self.mock_spark.catalog.tableExists.return_value = True
         self.spark_dataframe_writer.write(
+            df=self.mock_df,
             fmt="iceberg",
             table="argos_finance_catalog.silver.crypto_ohlcv",
             mode="merge",
@@ -131,6 +138,7 @@ class TestSparkDataframeWriter(unittest.TestCase):
     def test_merge_function_calls_createOrReplaceTempView_function(self):
         self.mock_spark.catalog.tableExists.return_value = True
         self.spark_dataframe_writer.write(
+            df=self.mock_df,
             fmt="iceberg",
             table="argos_finance_catalog.silver.crypto_ohlcv",
             mode="merge",
@@ -141,6 +149,7 @@ class TestSparkDataframeWriter(unittest.TestCase):
     def test_merge_function_constructs_correct_sql_script(self):
         self.mock_spark.catalog.tableExists.return_value = True
         self.spark_dataframe_writer.write(
+            df=self.mock_df,
             fmt="iceberg",
             table="argos_finance_catalog.silver.crypto_ohlcv",
             mode="merge",
