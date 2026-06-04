@@ -10,14 +10,12 @@ from pyspark.sql import SparkSession, DataFrame
 from src.utils.logger import logger
 
 
-class DataframeExtractor(BaseExtractor):
-    def __init__(self, spark: SparkSession):
-        self.spark = spark
-
-    def extract(self, table: str) -> DataFrame:
+class SparkDataframeExtractor(BaseExtractor):
+    @staticmethod
+    def extract(spark: SparkSession, table: str) -> DataFrame:
         try:
             logger.info(f"Extracting data via Spark table read to {table}.")
-            df = self.spark.read.table(table)
+            df = spark.read.table(table)
             logger.info(f"Extracted data via via Spark table successfull.")
             return df
         except Exception as e:

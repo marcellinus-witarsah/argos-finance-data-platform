@@ -30,7 +30,6 @@ class TestAPIExtractor(TestCase):
             "apikey": "mock_api",
         }
         self.mock_headers = {}
-        self.api_extractor = APIExtractor(self.mock_session)
 
     def tearDown(self):
         """A function that always runs after unit test function is run."""
@@ -41,8 +40,8 @@ class TestAPIExtractor(TestCase):
             status_code="200",
             data={"date": "2026-05-27", "symbol": "BTC", "price": 74000},
         )
-        data = self.api_extractor.extract(
-            self.mock_url, self.mock_query_params, self.mock_headers
+        data = APIExtractor.extract(
+            self.mock_session, self.mock_url, self.mock_query_params, self.mock_headers
         )
         self.assertIsInstance(data, dict)
 
@@ -51,15 +50,16 @@ class TestAPIExtractor(TestCase):
             status_code="200",
             data={"date": "2026-05-27", "symbol": "BTC", "price": 74000},
         )
-        data = self.api_extractor.extract(
-            self.mock_url, self.mock_query_params, self.mock_headers
+        data = APIExtractor.extract(
+            self.mock_session, self.mock_url, self.mock_query_params, self.mock_headers
         )
         self.assertEqual(data, {"date": "2026-05-27", "symbol": "BTC", "price": 74000})
 
     def test_api_extractor_raise_http_error_on_failed(self):
         self.mock_session.get.return_value = MockResponse(status_code="500", data={})
         with self.assertRaises(requests.exceptions.HTTPError):
-            self.api_extractor.extract(
+            APIExtractor.extract(
+                self.mock_session,
                 self.mock_url,
                 self.mock_query_params,
                 self.mock_headers,

@@ -4,14 +4,12 @@ from src.utils.logger import logger
 
 
 class APIExtractor(BaseExtractor):
-    def __init__(self, session: requests.Session):
-        self.session = session
-
+    @staticmethod
     def extract(
-        self, url: str, query_params: dict, headers: dict
+        session: requests.Session,url: str, query_params: dict, headers: dict
     ) -> dict:
         logger.info(f"Extracting data via API from {url}.")
-        response = self.session.get(
+        response = session.get(
             url=url,
             params=query_params,
             headers=headers,
