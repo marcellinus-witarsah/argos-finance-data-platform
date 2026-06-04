@@ -15,11 +15,9 @@ class SparkDataframeWriter(BaseWriter):
     FORMATS = ["iceberg", "delta"]
     MODES = ["append", "merge"]
 
-    def __init__(self, spark: SparkSession):
-        self.spark = spark
-
+    @staticmethod
     def write(
-        self,
+        spark: SparkSession,
         df: DataFrame,
         fmt: str,
         table: str,
@@ -28,14 +26,14 @@ class SparkDataframeWriter(BaseWriter):
         partition_columns: list | None = None,
     ) -> None:
 
-        if fmt not in self.FORMATS:
+        if fmt not in SparkDataframeWriter.FORMATS:
             raise ValueError(
-                f"Incorrect format. Use one of these options {', '.join(self.FORMATS)}"
+                f"Incorrect format. Use one of these options {', '.join(SparkDataframeWriter.FORMATS)}"
             )
 
-        if mode not in self.MODES:
+        if mode not in SparkDataframeWriter.MODES:
             raise ValueError(
-                f"Incorrect mode. Use one of these options {', '.join(self.MODES)}"
+                f"Incorrect mode. Use one of these options {', '.join(SparkDataframeWriter.MODES)}"
             )
 
         writer = df.writeTo(table).using(fmt)
@@ -49,7 +47,7 @@ class SparkDataframeWriter(BaseWriter):
                 f"Applied partition to{table} using {', '.join(partition_columns)} ..."
             )
 
-        if not self.spark.catalog.tableExists(table):
+        if not spark.catalog.tableExists(table):
             logger.info(f"Creating a {table} ...")
             writer.create()
             logger.info(f"Created {table}.")
@@ -60,11 +58,11 @@ class SparkDataframeWriter(BaseWriter):
                 logger.info(f"Appended Spark DataFrame records into {table}.")
             elif mode == "merge":
                 logger.info(f"Upserting Spark DataFrame records into {table} ...")
-                self.__write_merge(df=df, table=table, merge_columns=merge_columns)
+                SparkDataframeWriter.__write_merge(spark=spark, df=df, table=table, merge_columns=merge_columns)
                 logger.info(f"Upserted Spark DataFrame records into {table}.")
 
     def __write_merge(
-        self, df: DataFrame, table: str, merge_columns: list | None = None
+        spark: SparkSession, df: DataFrame, table: str, merge_columns: list | None = None
     ) -> None:
         df.createOrReplaceTempView("source")
         sql = f"""
@@ -74,4 +72,4 @@ class SparkDataframeWriter(BaseWriter):
             WHEN MATCHED THEN UPDATE SET *
             WHEN NOT MATCHED THEN INSERT *
         """
-        self.spark.sql(sql)
+        spark.sql(sql)
