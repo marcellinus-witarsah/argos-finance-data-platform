@@ -6,7 +6,7 @@ import unittest
 class TestMD5HasherStrategy(unittest.TestCase):
     def __make_md5_hasher_strategy(self):
         mock_logger = mock.Mock()
-        return MD5HasherStrategy(mock_logger)
+        return MD5HasherStrategy()
 
     def test_if_raises_attribute_error_exception(self):
         mock_invalid_type = 12345
