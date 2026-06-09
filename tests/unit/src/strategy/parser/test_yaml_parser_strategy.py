@@ -8,7 +8,7 @@ import unittest
 class TestYamlParseStrategy(unittest.TestCase):
     def __make_yaml_parser_strategy(self):
         mock_logger = mock.Mock()
-        return YAMLParserStrategy(mock_logger)
+        return YAMLParserStrategy()
 
     def test_if_raises_file_not_found_exception(self):
         mock_invalid_filepath = "./mock_invalid_filepath.yaml"
@@ -29,6 +29,6 @@ class TestYamlParseStrategy(unittest.TestCase):
 
         os.remove("./mock_valid_filetpath.yaml")
 
-        assert type(result) == dict
+        assert type(result) is dict
         assert result["mock_key_1"] == "mock_value_1"
         assert result["mock_key_2"] == "mock_value_2"
