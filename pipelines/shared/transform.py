@@ -1,19 +1,14 @@
 import pyspark.sql.functions as F
-from pyspark.sql import Column, DataFrame
-
-from src.strategy.hasher.base_hasher_startegy import BaseHasherStrategy
-from src.strategy.hasher.hasher_context import HasherContext
+from pyspark.sql import DataFrame
 
 
-def add_md5_hash(
-    df: DataFrame, col: Column | str
-) -> DataFrame:
-    return df.withColumn("hash_id", F.md5(col))
+def add_md5_hash(df: DataFrame, col: str) -> DataFrame:
+    return df.withColumn("md5_hash_value", F.md5(F.col(col)))
 
 
 def add_load_dttm(df: DataFrame) -> DataFrame:
     return df.withColumn("load_dttm", F.current_timestamp())
 
 
-def add_load_prdt(df: DataFrame, col: Column | str) -> DataFrame:
-    return df.withColumn("load_prdt", F.to_date(col))
+def add_load_prdt(df: DataFrame, col: str) -> DataFrame:
+    return df.withColumn("load_prdt", F.to_date(F.col(col)))

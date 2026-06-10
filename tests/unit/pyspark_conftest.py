@@ -1,6 +1,7 @@
 import unittest
 from pyspark.sql import SparkSession
 
+
 class PysparkConftest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
