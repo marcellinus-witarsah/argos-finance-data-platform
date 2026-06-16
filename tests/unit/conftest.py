@@ -1,8 +1,9 @@
 import unittest
 from pyspark.sql import SparkSession
+from src.utils.logger import logger
 
 
-class PysparkConftest(unittest.TestCase):
+class Conftest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.spark = SparkSession.builder.appName("unit_test").getOrCreate()

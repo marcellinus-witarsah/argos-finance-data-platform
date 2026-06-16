@@ -6,7 +6,6 @@
 # ================================================================================
 
 from abc import ABC, abstractmethod
-from src.utils.context import PipelineContext
 
 
 class BaseExtractor(ABC):

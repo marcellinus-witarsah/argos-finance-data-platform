@@ -17,10 +17,10 @@ from pipelines.bronze2silver.crypto_ohclv.transform import (
     parse_json,
     select_column,
 )
-from tests.unit.pyspark_conftest import PysparkConftest
+from tests.unit.conftest import Conftest
 
 
-class TestTransform(PysparkConftest):
+class TestTransform(Conftest):
     def test_parse_json(self):
         df = self.spark.createDataFrame(
             [('{"symbol": "BTC","price": 60000}', "BTC", 60000)],

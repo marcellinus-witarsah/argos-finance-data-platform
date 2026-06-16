@@ -6,14 +6,14 @@ from pyspark.sql.types import (
     DateType,
 )
 import pyspark.sql.functions as F
-from tests.unit.pyspark_conftest import PysparkConftest
+from tests.unit.conftest import Conftest
 from pipelines.shared.transform import add_md5_hash, add_load_dttm, add_load_prdt
 from unittest.mock import patch
 import datetime
 import chispa
 
 
-class TestSharedTransform(PysparkConftest):
+class TestTransform(Conftest):
     def test_add_md5_hash(self):
         df = self.spark.createDataFrame(
             [('{"symbol": "BTC","price": 60000}', "357a42ac565d120f9ac24a1aa5b29473")],

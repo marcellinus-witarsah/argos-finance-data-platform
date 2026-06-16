@@ -6,7 +6,7 @@ from src.utils.logger import logger
 class APIExtractor(BaseExtractor):
     @staticmethod
     def extract(
-        session: requests.Session,url: str, query_params: dict, headers: dict
+        session: requests.Session, url: str, query_params: dict, headers: dict
     ) -> dict:
         logger.info(f"Extracting data via API from {url}.")
         response = session.get(
