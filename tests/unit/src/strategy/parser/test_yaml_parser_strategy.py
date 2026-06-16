@@ -7,7 +7,6 @@ import unittest
 
 class TestYamlParseStrategy(unittest.TestCase):
     def __make_yaml_parser_strategy(self):
-        mock_logger = mock.Mock()
         return YAMLParserStrategy()
 
     def test_if_raises_file_not_found_exception(self):
