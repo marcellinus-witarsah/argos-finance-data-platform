@@ -19,7 +19,7 @@ class Conftest(unittest.TestCase):
 @pytest.fixture(scope="session")
 def spark():
     logger.info("Create Spark Session for Unit Testing ...")
-    spark = SparkSession.builder.master("local[1]").getOrCreate()
+    spark = SparkSession.builder.master("local[1]").appName("UnitTest").getOrCreate()
     yield spark
     logger.info("Stop Spark Session after Unit Testing ...")
     spark.stop()
