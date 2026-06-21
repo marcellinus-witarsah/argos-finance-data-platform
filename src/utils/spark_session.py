@@ -6,4 +6,6 @@ from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
 # Create a spark session
-spark = SparkSession.builder.appName(os.getenv("PROJECT_NAME")).getOrCreate()
+spark = SparkSession.builder.appName(
+    os.getenv("PROJECT_NAME", "argos-finance-data-platform")
+).getOrCreate()

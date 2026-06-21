@@ -4,13 +4,9 @@ extractor:
     series_id: "FEDFUNDS"
     file_type: "json"
   headers: ~
-
 transformer: ~
-
 writer:
-  catalog: argos_finance_catalog
-  schema: bronze 
-  format: iceberg
-  mode: append
-  partition_by: load_prdt
-  table: interest_rates
+  table: catalog.argos_finance_catalog.bronze.fed_interest_rates
+  fmt: iceberg
+  mode: merge
+  merge_columns: [id]

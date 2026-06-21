@@ -3,13 +3,10 @@ extractor:
   query_params:
     function: "DIGITAL_CURRENCY_DAILY"
   headers: ~
-
 transformer: ~
-
 writer:
-  catalog: argos_finance_catalog
-  schema: bronze 
-  format: iceberg
-  mode: append
-  partition_by: load_prdt
-  table: alpha_vantage_crypto_ohlcv
+  table: catalog.argos_finance_catalog.bronze.alpha_vantage_crypto_ohlcv
+  fmt: iceberg
+  mode: merge
+  merge_columns: [id]
+

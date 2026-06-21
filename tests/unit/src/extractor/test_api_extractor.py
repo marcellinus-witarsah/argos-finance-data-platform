@@ -1,7 +1,9 @@
-from unittest import mock, TestCase
-from src.extractor.api_extractor import APIExtractor
-import requests
 import re
+
+import pytest
+import requests
+
+from src.extractor.api_extractor import APIExtractor
 
 
 class MockResponse:
@@ -18,49 +20,60 @@ class MockResponse:
             raise requests.exceptions.HTTPError
 
 
-class TestAPIExtractor(TestCase):
-    def setUp(self):
-        """A function that always runs at the start of unit test."""
-        self.mock_session = mock.Mock(spec=requests.Session)
-        self.mock_url = "https://www.alphavantage.co/query"
-        self.mock_query_params = {
+class TestAPIExtractor:
+    def test_api_extractor_returns_dict_data_type_on_success(self, mocker):
+        mock_session = mocker.Mock()
+        mock_url = "https://www.alphavantage.co/query"
+        mock_query_params = {
             "function": "DIGITAL_CURRENCY_DAILY",
             "symbol": "BTC",
             "market": "USD",
             "apikey": "mock_api",
         }
-        self.mock_headers = {}
+        mock_headers = {}
 
-    def tearDown(self):
-        """A function that always runs after unit test function is run."""
-        pass
-
-    def test_api_extractor_returns_dict_data_type_on_success(self):
-        self.mock_session.get.return_value = MockResponse(
+        mock_session.get.return_value = MockResponse(
             status_code="200",
             data={"date": "2026-05-27", "symbol": "BTC", "price": 74000},
         )
-        data = APIExtractor.extract(
-            self.mock_session, self.mock_url, self.mock_query_params, self.mock_headers
-        )
-        self.assertIsInstance(data, dict)
+        api_extractor = APIExtractor(mock_session)
+        data = api_extractor.extract(mock_url, mock_query_params, mock_headers)
 
-    def test_api_extractor_returns_json_data_on_success(self):
-        self.mock_session.get.return_value = MockResponse(
+        assert isinstance(data, dict)
+
+    def test_api_extractor_returns_json_data_on_success(self, mocker):
+        mock_session = mocker.Mock()
+        mock_url = "https://www.alphavantage.co/query"
+        mock_query_params = {
+            "function": "DIGITAL_CURRENCY_DAILY",
+            "symbol": "BTC",
+            "market": "USD",
+            "apikey": "mock_api",
+        }
+        mock_headers = {}
+
+        mock_session.get.return_value = MockResponse(
             status_code="200",
             data={"date": "2026-05-27", "symbol": "BTC", "price": 74000},
         )
-        data = APIExtractor.extract(
-            self.mock_session, self.mock_url, self.mock_query_params, self.mock_headers
-        )
-        self.assertEqual(data, {"date": "2026-05-27", "symbol": "BTC", "price": 74000})
+        api_extractor = APIExtractor(mock_session)
+        data = api_extractor.extract(mock_url, mock_query_params, mock_headers)
 
-    def test_api_extractor_raise_http_error_on_failed(self):
-        self.mock_session.get.return_value = MockResponse(status_code="500", data={})
-        with self.assertRaises(requests.exceptions.HTTPError):
-            APIExtractor.extract(
-                self.mock_session,
-                self.mock_url,
-                self.mock_query_params,
-                self.mock_headers,
-            )
+        assert data == {"date": "2026-05-27", "symbol": "BTC", "price": 74000}
+
+    def test_api_extractor_raise_http_error_on_failed(self, mocker):
+        mock_session = mocker.Mock()
+        mock_url = "https://www.alphavantage.co/query"
+        mock_query_params = {
+            "function": "DIGITAL_CURRENCY_DAILY",
+            "symbol": "BTC",
+            "market": "USD",
+            "apikey": "mock_api",
+        }
+        mock_headers = {}
+
+        mock_session.get.return_value = MockResponse(status_code="500", data={})
+        api_extractor = APIExtractor(mock_session)
+
+        with pytest.raises(requests.exceptions.HTTPError):
+            api_extractor.extract(mock_url, mock_query_params, mock_headers)
