@@ -7,15 +7,6 @@ from src.extractor.spark_dataframe_extractor import SparkDataframeExtractor
 
 
 class TestDataframeExtractor:
-    # def setUp(self, spark):
-    #     """A function that always runs at the start of unit test."""
-    #     self.mock_spark = mock.Mock(spec=SparkSession)
-    #     self.mock_table = "argos_finance_catalog.bronze.crypto_ohlcv"
-
-    # def tearDown(self):
-    #     """A function that always runs after unit test function is run."""
-    #     pass
-
     def test_extract_function_read_correct_table_on_success(self, spark):
         mock_table = "mock_table"
         expected_df = spark.createDataFrame(
