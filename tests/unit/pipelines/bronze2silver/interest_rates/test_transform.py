@@ -2,27 +2,17 @@ import datetime
 
 import chispa
 import pyspark.sql.functions as F
-from pyspark.sql.types import (
-    ArrayType,
-    DateType,
-    DoubleType,
-    IntegerType,
-    StringType,
-    StructField,
-    StructType,
-)
+from pyspark.sql.types import (ArrayType, DateType, DoubleType, IntegerType,
+                               StringType, StructField, StructType)
 
-from pipelines.bronze2silver.interest_rates.transform import (
-    explode_json,
-    parse_json,
-    select_column,
-)
-from tests.unit.conftest import Conftest
+from pipelines.bronze2silver.interest_rates.transform import (explode_json,
+                                                              parse_json,
+                                                              select_column)
 
 
-class TestTransform(Conftest):
-    def test_parse_json(self):
-        df = self.spark.createDataFrame(
+class TestTransform:
+    def test_parse_json(self, spark):
+        df = spark.createDataFrame(
             [('{"symbol": "BTC","price": 60000}', "BTC", 60000)],
             schema=StructType(
                 [
@@ -54,7 +44,7 @@ class TestTransform(Conftest):
 
         chispa.assert_column_equality(df, "parsed_json", "expected_parsed_json")
 
-    def test_explode_json(self):
+    def test_explode_json(self, spark):
         schema = StructType(
             [
                 StructField(
@@ -74,7 +64,7 @@ class TestTransform(Conftest):
             ]
         )
 
-        df = self.spark.createDataFrame(
+        df = spark.createDataFrame(
             [
                 (
                     """
@@ -108,7 +98,7 @@ class TestTransform(Conftest):
             "parsed_json", F.from_json(F.col("json_data"), schema=schema)
         )
 
-        expected_df = self.spark.createDataFrame(
+        expected_df = spark.createDataFrame(
             [
                 (
                     """
@@ -156,8 +146,8 @@ class TestTransform(Conftest):
 
         chispa.assert_df_equality(df, expected_df, ignore_nullable=True)
 
-    def test_select_column(self):
-        df = self.spark.createDataFrame(
+    def test_select_column(self, spark):
+        df = spark.createDataFrame(
             [
                 (
                     """
@@ -202,7 +192,7 @@ class TestTransform(Conftest):
             ),
         ).drop("json_data")
 
-        expected_df = self.spark.createDataFrame(
+        expected_df = spark.createDataFrame(
             [
                 (datetime.date(1929, 1, 1), 1065.9),
                 (datetime.date(1930, 1, 1), 975.5),

@@ -6,27 +6,25 @@ from dotenv import load_dotenv
 from pyspark.sql.types import StringType, StructField, StructType
 
 from pipelines.shared.transform import (
-    add_hash_id_column,
-    add_load_dttm_column,
-    add_load_prdt_column,
+    add_md5_hash,
+    add_load_dttm,
+    add_load_prdt,
 )
 from src.extractor.api_extractor import APIExtractor
-from src.strategy.hasher.md5_hasher_strategy import MD5HasherStrategy
 from src.strategy.parser.parser_context import ParserContext
 from src.strategy.parser.yaml_parser_strategy import YAMLParserStrategy
 from src.utils.spark_session import spark
 from src.writer.spark_dataframe_writer import SparkDataframeWriter
 
-
-def get_configuration() -> dict:
-    yaml_parser = ParserContext(YAMLParserStrategy())
-    cfg = yaml_parser.parse("./configs/api2bronze/fed_interest_rates.yaml")
-    api_key = os.getenv("FRED_API_KEY")
+def get_configuration(
+        cfg: dict,
+        env: dict
+) -> dict:
+    api_key = env.get("FRED_API_KEY")
     if not api_key:
         raise ValueError("FRED_API_KEY environment variable is not set")
     cfg["extractor"]["query_params"]["api_key"] = api_key
     return cfg
-
 
 def run(cfg: dict):
     # Extract
@@ -41,7 +39,7 @@ def run(cfg: dict):
 
     # Transform
     df = spark.createDataFrame(
-        data=[json.dumps(bronze_fed_interest_rates)],
+        data=[(json.dumps(bronze_fed_interest_rates),)],
         schema=StructType(
             [
                 StructField("json_data", StringType(), False),
@@ -51,10 +49,10 @@ def run(cfg: dict):
 
     df = (
         df.transform(
-            add_hash_id_column, col="json_data", hasher_stategy=MD5HasherStrategy()
+            add_md5_hash, col="json_data"
         )
-        .transform(add_load_dttm_column)
-        .transform(add_load_prdt_column)
+        .transform(add_load_dttm)
+        .transform(add_load_prdt)
     )
 
     # Load
@@ -71,8 +69,17 @@ def run(cfg: dict):
 
 
 def main():
+    # Load environment variables
     load_dotenv()
-    cfg = get_configuration()
+
+    # Read YAML file
+    yaml_parser = ParserContext(YAMLParserStrategy())
+    cfg = yaml_parser.parse("./configs/api2bronze/fed_interest_rates.yaml")
+
+    # Get configuration
+    cfg = get_configuration(cfg=cfg, env=os.environ)
+    
+    # Run pipeline
     run(cfg=cfg)
 
 

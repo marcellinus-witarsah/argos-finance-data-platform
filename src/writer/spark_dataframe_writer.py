@@ -15,9 +15,11 @@ class SparkDataframeWriter(BaseWriter):
     FORMATS = ["iceberg", "delta"]
     MODES = ["append", "merge"]
 
-    @staticmethod
+    def __init__(self, spark: SparkSession):
+        self.spark = spark
+
     def write(
-        spark: SparkSession,
+        self,
         df: DataFrame,
         fmt: str,
         table: str,
@@ -47,7 +49,7 @@ class SparkDataframeWriter(BaseWriter):
                 f"Applied partition to{table} using {', '.join(partition_columns)} ..."
             )
 
-        if not spark.catalog.tableExists(table):
+        if not self.spark.catalog.tableExists(table):
             logger.info(f"Creating a {table} ...")
             writer.create()
             logger.info(f"Created {table}.")
@@ -58,11 +60,11 @@ class SparkDataframeWriter(BaseWriter):
                 logger.info(f"Appended Spark DataFrame records into {table}.")
             elif mode == "merge":
                 logger.info(f"Upserting Spark DataFrame records into {table} ...")
-                SparkDataframeWriter.__write_merge(spark=spark, df=df, table=table, merge_columns=merge_columns)
+                self.__write_merge(df=df, table=table, merge_columns=merge_columns)
                 logger.info(f"Upserted Spark DataFrame records into {table}.")
 
     def __write_merge(
-        spark: SparkSession, df: DataFrame, table: str, merge_columns: list | None = None
+        self, df: DataFrame, table: str, merge_columns: list | None = None
     ) -> None:
         df.createOrReplaceTempView("source")
         sql = f"""
@@ -72,4 +74,4 @@ class SparkDataframeWriter(BaseWriter):
             WHEN MATCHED THEN UPDATE SET *
             WHEN NOT MATCHED THEN INSERT *
         """
-        spark.sql(sql)
+        self.spark.sql(sql)

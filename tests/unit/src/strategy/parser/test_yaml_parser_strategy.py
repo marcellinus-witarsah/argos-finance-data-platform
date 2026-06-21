@@ -1,20 +1,18 @@
-import yaml
 import os
+
+import pytest
+import yaml
+
 from src.strategy.parser.yaml_parser_strategy import YAMLParserStrategy
-from unittest import mock
-import unittest
 
 
-class TestYamlParseStrategy(unittest.TestCase):
-    def __make_yaml_parser_strategy(self):
-        return YAMLParserStrategy()
-
+class TestYamlParseStrategy:
     def test_if_raises_file_not_found_exception(self):
         mock_invalid_filepath = "./mock_invalid_filepath.yaml"
 
-        yaml_parser_strategy = self.__make_yaml_parser_strategy()
+        yaml_parser_strategy = YAMLParserStrategy()
 
-        with self.assertRaises(FileNotFoundError):
+        with pytest.raises(FileNotFoundError):
             yaml_parser_strategy.parse(mock_invalid_filepath)
 
     def test_if_yaml_filepath_and_content_valid_return_a_dictionary(self):
@@ -23,7 +21,7 @@ class TestYamlParseStrategy(unittest.TestCase):
         with open("./mock_valid_filetpath.yaml", "w") as file:
             yaml.safe_dump(config_data, file, default_flow_style=False, sort_keys=False)
 
-        yaml_parser_strategy = self.__make_yaml_parser_strategy()
+        yaml_parser_strategy = YAMLParserStrategy()
         result = yaml_parser_strategy.parse("./mock_valid_filetpath.yaml")
 
         os.remove("./mock_valid_filetpath.yaml")
