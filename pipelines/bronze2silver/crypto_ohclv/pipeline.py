@@ -1,8 +1,7 @@
 from dotenv import load_dotenv
 from pyspark.sql.types import MapType, StringType, StructField, StructType
 
-from pipelines.bronze2silver.crypto_ohclv.transform import (explode_json,
-                                                            select_column)
+from pipelines.bronze2silver.crypto_ohclv.transform import explode_json, select_column
 from pipelines.shared.transform import add_load_dttm, add_load_prdt, parse_json
 from src.extractor.spark_dataframe_extractor import SparkDataframeExtractor
 from src.strategy.parser.parser_context import ParserContext

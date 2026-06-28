@@ -2,11 +2,16 @@ import datetime
 
 import chispa
 import pyspark.sql.functions as F
-from pyspark.sql.types import (ArrayType, DateType, DoubleType, StringType,
-                               StructField, StructType)
+from pyspark.sql.types import (
+    ArrayType,
+    DateType,
+    DoubleType,
+    StringType,
+    StructField,
+    StructType,
+)
 
-from pipelines.bronze2silver.interest_rates.transform import (explode_json,
-                                                              select_column)
+from pipelines.bronze2silver.interest_rates.transform import explode_json, select_column
 
 
 class TestTransform:

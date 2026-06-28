@@ -4,10 +4,15 @@ import json
 
 import chispa
 import pyspark.sql.functions as F
-from pyspark.sql.types import (DateType, StringType, StructField, StructType,
-                               TimestampType)
+from pyspark.sql.types import (
+    DateType,
+    StringType,
+    StructField,
+    StructType,
+    TimestampType,
+)
 
-from pipelines.api2bronze.fed_interest_rates.pipeline import main
+from pipelines.api2bronze.fed_interest_rates.pipeline import run
 
 SAMPLE_RESPONSE = {
     "realtime_start": "2024-01-01",
@@ -36,6 +41,25 @@ SAMPLE_RESPONSE = {
             "value": "5.33",
         },
     ],
+}
+
+SAMPLE_CFG = {
+    "extractor": {
+        "url": "https://api.stlouisfed.org/fred/series/observations",
+        "query_params": {
+            "series_id": "FEDFUNDS",
+            "file_type": "json",
+            "api_key": "FRED_API_KEY",
+        },
+        "headers": None,
+    },
+    "transformer": None,
+    "writer": {
+        "table": "argos_finance_catalog.bronze.fed_interest_rates",
+        "fmt": "iceberg",
+        "mode": "merge",
+        "merge_columns": ["id"],
+    },
 }
 
 
@@ -82,7 +106,7 @@ class TestFEDInterestRatesPipeline:
         )
         table_name = "argos_finance_catalog.bronze.fed_interest_rates"
         spark.sql(f"DROP TABLE IF EXISTS {table_name}")
-        main()
+        run(cfg=SAMPLE_CFG)
         df = spark.read.table(table_name)
 
         assert df.count() == 1

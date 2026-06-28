@@ -3,8 +3,14 @@ import json
 
 import chispa
 import pyspark.sql.functions as F
-from pyspark.sql.types import (DateType, DoubleType, StringType, StructField,
-                               StructType, TimestampType)
+from pyspark.sql.types import (
+    DateType,
+    DoubleType,
+    StringType,
+    StructField,
+    StructType,
+    TimestampType,
+)
 
 from pipelines.bronze2silver.crypto_ohclv.pipeline import main
 
@@ -57,6 +63,7 @@ class TestCryptoOHLCVPipeline:
                 ]
             ),
         )
+        spark.sql(f"DROP TABLE IF EXISTS {source_table_name}")
         source_df.writeTo(source_table_name).using("iceberg").create()
 
         mocker.patch("src.utils.spark_session.get_spark", new=spark)

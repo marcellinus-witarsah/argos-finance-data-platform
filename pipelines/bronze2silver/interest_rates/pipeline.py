@@ -3,11 +3,15 @@ import os
 
 import requests
 from dotenv import load_dotenv
-from pyspark.sql.types import (ArrayType, IntegerType, StringType, StructField,
-                               StructType)
+from pyspark.sql.types import (
+    ArrayType,
+    IntegerType,
+    StringType,
+    StructField,
+    StructType,
+)
 
-from pipelines.bronze2silver.interest_rates.transform import (explode_json,
-                                                              select_column)
+from pipelines.bronze2silver.interest_rates.transform import explode_json, select_column
 from pipelines.shared.transform import add_load_dttm, add_load_prdt, parse_json
 from src.extractor.spark_dataframe_extractor import SparkDataframeExtractor
 from src.strategy.parser.parser_context import ParserContext

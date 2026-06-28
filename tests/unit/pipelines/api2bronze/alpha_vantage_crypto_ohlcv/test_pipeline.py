@@ -3,7 +3,9 @@ import argparse
 import pytest
 
 from pipelines.api2bronze.alpha_vantage_crypto_ohlcv.pipeline import (
-    get_configuration, get_parameters)
+    get_configuration,
+    get_parameters,
+)
 
 
 class TestPipeline:

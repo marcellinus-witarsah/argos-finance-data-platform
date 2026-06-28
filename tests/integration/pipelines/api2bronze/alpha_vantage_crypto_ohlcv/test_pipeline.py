@@ -4,10 +4,15 @@ import json
 
 import chispa
 import pyspark.sql.functions as F
-from pyspark.sql.types import (DateType, StringType, StructField, StructType,
-                               TimestampType)
+from pyspark.sql.types import (
+    DateType,
+    StringType,
+    StructField,
+    StructType,
+    TimestampType,
+)
 
-from pipelines.api2bronze.alpha_vantage_crypto_ohlcv.pipeline import main
+from pipelines.api2bronze.alpha_vantage_crypto_ohlcv.pipeline import run
 
 SAMPLE_RESPONSE = {
     "Meta Data": {
@@ -38,14 +43,29 @@ SAMPLE_RESPONSE = {
     },
 }
 
+SAMPLE_CFG = {
+    "extractor": {
+        "url": "https://www.alphavantage.co/query",
+        "query_params": {
+            "function": "DIGITAL_CURRENCY_DAILY",
+            "market": "USD",
+            "symbol": "BTC",
+            "apikey": "alpha_vantage_api_key",
+        },
+        "headers": None,
+    },
+    "transformer": None,
+    "writer": {
+        "table": "argos_finance_catalog.bronze.alpha_vantage_crypto_ohlcv",
+        "fmt": "iceberg",
+        "mode": "merge",
+        "merge_columns": ["id"],
+    },
+}
+
 
 class TestAlphaVantageCryptoOHLCVPipeline:
     def test_run_writes_to_spark_table(self, spark, mocker):
-        mocker.patch(
-            "pipelines.api2bronze.alpha_vantage_crypto_ohlcv.pipeline.get_parameters",
-            return_value=mocker.Mock(),
-        )
-
         mock_response = mocker.Mock()
         mock_response.json.return_value = SAMPLE_RESPONSE
         mock_response.raise_for_status.return_value = None
@@ -87,7 +107,7 @@ class TestAlphaVantageCryptoOHLCVPipeline:
         )
         table_name = "argos_finance_catalog.bronze.alpha_vantage_crypto_ohlcv"
 
-        main()
+        run(cfg=SAMPLE_CFG)
 
         result_df = spark.read.table(table_name)
 

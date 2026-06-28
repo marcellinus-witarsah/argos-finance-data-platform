@@ -5,8 +5,7 @@ import requests
 from dotenv import load_dotenv
 from pyspark.sql.types import StringType, StructField, StructType
 
-from pipelines.shared.transform import (add_load_dttm, add_load_prdt,
-                                        add_md5_hash)
+from pipelines.shared.transform import add_load_dttm, add_load_prdt, add_md5_hash
 from src.extractor.api_extractor import APIExtractor
 from src.strategy.parser.parser_context import ParserContext
 from src.strategy.parser.yaml_parser_strategy import YAMLParserStrategy
