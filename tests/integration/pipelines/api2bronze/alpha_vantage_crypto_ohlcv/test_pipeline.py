@@ -1,11 +1,13 @@
+import datetime
+import hashlib
 import json
-import unittest
-from unittest.mock import Mock, patch
 
-from pyspark.sql.types import DateType, StringType, TimestampType
+import chispa
+import pyspark.sql.functions as F
+from pyspark.sql.types import (DateType, StringType, StructField, StructType,
+                               TimestampType)
 
-from pipelines.api2bronze.alpha_vantage_crypto_ohlcv.pipeline import run
-from tests.integration.conftest import Conftest
+from pipelines.api2bronze.alpha_vantage_crypto_ohlcv.pipeline import main
 
 SAMPLE_RESPONSE = {
     "Meta Data": {
@@ -24,96 +26,79 @@ SAMPLE_RESPONSE = {
             "4a. close (USD)": "43200.00",
             "5. volume": "15234.56",
             "6. market cap (USD)": "15234.56",
-        }
-    },
-}
-
-SAMPLE_CFG = {
-    "extractor": {
-        "url": "https://www.alphavantage.co/query",
-        "query_params": {
-            "function": "DIGITAL_CURRENCY_DAILY",
-            "symbol": "BTC",
-            "market": "USD",
-            "apikey": "test_key",
         },
-        "headers": {},
-    },
-    "writer": {
-        "table": "catalog.argos_finance_catalog.bronze.alpha_vantage_crypto_ohlcv",
-        "fmt": "iceberg",
-        "mode": "merge",
-        "merge_columns": ["id"],
-        "partition_columns": [],
+        "2024-01-01": {
+            "1a. open (USD)": "40000.00",
+            "2a. high (USD)": "40000.00",
+            "3a. low (USD)": "40000.00",
+            "4a. close (USD)": "40000.00",
+            "5. volume": "23234.56",
+            "6. market cap (USD)": "12234.56",
+        },
     },
 }
 
 
-class TestAlphaVantageCryptoOHLCVPipeline(Conftest):
-    def _run_with_mocks(self):
-        mock_response = Mock()
+class TestAlphaVantageCryptoOHLCVPipeline:
+    def test_run_writes_to_spark_table(self, spark, mocker):
+        mocker.patch(
+            "pipelines.api2bronze.alpha_vantage_crypto_ohlcv.pipeline.get_parameters",
+            return_value=mocker.Mock(),
+        )
+
+        mock_response = mocker.Mock()
         mock_response.json.return_value = SAMPLE_RESPONSE
         mock_response.raise_for_status.return_value = None
+        mocker.patch("requests.Session.get", return_value=mock_response)
 
-        with patch("requests.Session.get", return_value=mock_response), patch(
-            "src.writer.spark_dataframe_writer.SparkDataframeWriter.write"
-        ) as mock_write:
-            run(cfg=SAMPLE_CFG)
+        mocker.patch("src.utils.spark_session.get_spark", new=spark)
 
-        return mock_write
+        FIXED_TIMESTAMP = datetime.datetime(2026, 1, 1, 10, 0, 0)
+        FIXED_DATE = datetime.date(2026, 1, 1)
 
-    def test_run_produces_valid_schema(self):
-        mock_write = self._run_with_mocks()
+        mocker.patch(
+            "pipelines.shared.transform.F.current_timestamp",
+            return_value=F.lit(FIXED_TIMESTAMP),
+        )
+        mocker.patch(
+            "pipelines.shared.transform.F.to_date", return_value=F.lit(FIXED_DATE)
+        )
 
-        mock_write.assert_called_once()
-        df = mock_write.call_args.kwargs["df"]
+        # Expected Dataframe
+        expected_df = spark.createDataFrame(
+            [
+                (
+                    json.dumps(SAMPLE_RESPONSE),
+                    hashlib.md5(
+                        json.dumps(SAMPLE_RESPONSE).encode("utf-8")
+                    ).hexdigest(),
+                    FIXED_TIMESTAMP,
+                    FIXED_DATE,
+                ),
+            ],
+            schema=StructType(
+                [
+                    StructField("json_data", StringType(), True),
+                    StructField("id", StringType(), True),
+                    StructField("load_dttm", TimestampType(), True),
+                    StructField("load_prdt", DateType(), True),
+                ]
+            ),
+        )
+        table_name = "argos_finance_catalog.bronze.alpha_vantage_crypto_ohlcv"
 
-        assert "json_data" in df.columns
-        assert "id" in df.columns
-        assert "load_dttm" in df.columns
-        assert "load_prdt" in df.columns
+        main()
 
-    def test_run_produces_single_row(self):
-        mock_write = self._run_with_mocks()
+        result_df = spark.read.table(table_name)
 
-        df = mock_write.call_args.kwargs["df"]
-        assert df.count() == 1
+        assert result_df.count() == 1
 
-    def test_run_stores_raw_json(self):
-        mock_write = self._run_with_mocks()
+        chispa.dataframe_comparer.assert_schema_equality(
+            expected_df.schema, result_df.schema, ignore_nullable=True
+        )
 
-        df = mock_write.call_args.kwargs["df"]
-        row = df.first()
-        assert json.loads(row["json_data"]) == SAMPLE_RESPONSE
+        chispa.dataframe_comparer.assert_df_equality(
+            expected_df, result_df, ignore_nullable=True, ignore_row_order=True
+        )
 
-    def test_run_generates_nonnull_id(self):
-        mock_write = self._run_with_mocks()
-
-        df = mock_write.call_args.kwargs["df"]
-        row = df.first()
-        assert row["id"] is not None
-        assert len(row["id"]) == 32
-
-    def test_run_column_types(self):
-        mock_write = self._run_with_mocks()
-
-        df = mock_write.call_args.kwargs["df"]
-        schema = {field.name: field.dataType for field in df.schema.fields}
-
-        assert isinstance(schema["json_data"], StringType)
-        assert isinstance(schema["id"], StringType)
-        assert isinstance(schema["load_dttm"], TimestampType)
-        assert isinstance(schema["load_prdt"], DateType)
-
-    def test_run_passes_correct_writer_args(self):
-        mock_write = self._run_with_mocks()
-
-        call_kwargs = mock_write.call_args.kwargs
-        assert call_kwargs["fmt"] == "iceberg"
-        assert call_kwargs["mode"] == "merge"
-        assert call_kwargs["table"] == SAMPLE_CFG["writer"]["table"]
-        assert call_kwargs["merge_columns"] == ["id"]
-
-
-if __name__ == "__main__":
-    unittest.main()
+        spark.sql(f"DROP TABLE IF EXISTS {table_name}")

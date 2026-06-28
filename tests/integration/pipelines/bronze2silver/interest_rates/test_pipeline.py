@@ -1,15 +1,14 @@
 import datetime
-import hashlib
 import json
 
 import chispa
 import pyspark.sql.functions as F
-from pyspark.sql.types import (DateType, StringType, StructField, StructType,
-                               TimestampType)
+from pyspark.sql.types import (DateType, DoubleType, StringType, StructField,
+                               StructType, TimestampType)
 
-from pipelines.api2bronze.fed_interest_rates.pipeline import main
+from pipelines.bronze2silver.interest_rates.pipeline import main
 
-SAMPLE_RESPONSE = {
+json_data = {
     "realtime_start": "2024-01-01",
     "realtime_end": "2024-01-01",
     "observation_start": "1954-07-01",
@@ -27,7 +26,7 @@ SAMPLE_RESPONSE = {
             "realtime_start": "2024-01-01",
             "realtime_end": "2024-01-01",
             "date": "2023-11-01",
-            "value": "5.33",
+            "value": "4.33",
         },
         {
             "realtime_start": "2024-01-01",
@@ -39,37 +38,15 @@ SAMPLE_RESPONSE = {
 }
 
 
-class TestFEDInterestRatesPipeline:
+class TestInterestRatesPipeline:
     def test_run_writes_to_spark_table(self, spark, mocker):
-        mock_response = mocker.Mock()
-        mock_response.json.return_value = SAMPLE_RESPONSE
-        mock_response.raise_for_status.return_value = None
-        mocker.patch("requests.Session.get", return_value=mock_response)
+        source_table_name = "argos_finance_catalog.bronze.fed_interest_rates"
 
-        mocker.patch("src.utils.spark_session.get_spark", new=spark)
-
-        FIXED_TIMESTAMP = datetime.datetime(2026, 1, 1, 10, 0, 0)
-        FIXED_DATE = datetime.date(2026, 1, 1)
-
-        mocker.patch(
-            "pipelines.shared.transform.F.current_timestamp",
-            return_value=F.lit(FIXED_TIMESTAMP),
-        )
-        mocker.patch(
-            "pipelines.shared.transform.F.to_date", return_value=F.lit(FIXED_DATE)
-        )
-
-        # Expected Dataframe
-        expected_df = spark.createDataFrame(
-            [
-                (
-                    json.dumps(SAMPLE_RESPONSE),
-                    hashlib.md5(
-                        json.dumps(SAMPLE_RESPONSE).encode("utf-8")
-                    ).hexdigest(),
-                    FIXED_TIMESTAMP,
-                    FIXED_DATE,
-                ),
+        FIXED_TIMESTAMP = datetime.datetime(2024, 1, 2, 7, 0, 0)
+        FIXED_DATE = datetime.date(2024, 1, 2)
+        source_df = spark.createDataFrame(
+            data=[
+                (json.dumps(json_data), "1", FIXED_TIMESTAMP, FIXED_DATE),
             ],
             schema=StructType(
                 [
@@ -80,12 +57,42 @@ class TestFEDInterestRatesPipeline:
                 ]
             ),
         )
-        table_name = "argos_finance_catalog.bronze.fed_interest_rates"
-        spark.sql(f"DROP TABLE IF EXISTS {table_name}")
+        source_df.writeTo(source_table_name).using("iceberg").create()
+
+        mocker.patch("src.utils.spark_session.get_spark", new=spark)
+
+        mocker.patch(
+            "pipelines.shared.transform.F.current_timestamp",
+            return_value=F.lit(FIXED_TIMESTAMP),
+        )
+        mocker.patch(
+            "pipelines.shared.transform.F.to_date", return_value=F.lit(FIXED_DATE)
+        )
+
+        mocker.patch("src.utils.spark_session.get_spark", new=spark)
+
+        expected_df = spark.createDataFrame(
+            data=[
+                (datetime.date(2023, 11, 1), 4.33, FIXED_TIMESTAMP, FIXED_DATE),
+                (datetime.date(2023, 12, 1), 5.33, FIXED_TIMESTAMP, FIXED_DATE),
+            ],
+            schema=StructType(
+                [
+                    StructField("date", DateType(), True),
+                    StructField("rate", DoubleType(), True),
+                    StructField("load_dttm", TimestampType(), True),
+                    StructField("load_prdt", DateType(), True),
+                ]
+            ),
+        )
+        table_name = "argos_finance_catalog.silver.interest_rates"
         main()
         df = spark.read.table(table_name)
 
-        assert df.count() == 1
+        df.show()
+
+        assert df.count() == 2
+
         chispa.dataframe_comparer.assert_schema_equality(
             expected_df.schema, df.schema, ignore_nullable=True
         )
@@ -95,3 +102,4 @@ class TestFEDInterestRatesPipeline:
         )
 
         spark.sql(f"DROP TABLE IF EXISTS {table_name}")
+        spark.sql(f"DROP TABLE IF EXISTS {source_table_name}")

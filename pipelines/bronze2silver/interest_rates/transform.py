@@ -1,10 +1,6 @@
 import pyspark.sql.functions as F
-from pyspark.sql.types import StructType, DateType, DoubleType
 from pyspark.sql import DataFrame
-
-
-def parse_json(df: DataFrame, col: str, schema: StructType) -> DataFrame:
-    return df.withColumn("parsed_json", F.from_json(F.col(col), schema))
+from pyspark.sql.types import DateType, DoubleType
 
 
 def explode_json(df: DataFrame, col: str) -> DataFrame:

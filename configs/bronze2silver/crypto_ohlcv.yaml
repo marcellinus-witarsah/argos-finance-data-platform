@@ -4,4 +4,4 @@ writer:
   table: argos_finance_catalog.silver.crypto_ohlcv
   fmt: iceberg
   mode: merge
-  merge_columns: [date]
+  merge_columns: [ticker, date]

@@ -53,15 +53,15 @@ class SparkDataframeWriter(BaseWriter):
             logger.info(f"Creating a {table} ...")
             writer.create()
             logger.info(f"Created {table}.")
-        else:
-            if mode == "append":
-                logger.info(f"Appending Spark DataFrame records into {table} ...")
-                writer.append()
-                logger.info(f"Appended Spark DataFrame records into {table}.")
-            elif mode == "merge":
-                logger.info(f"Upserting Spark DataFrame records into {table} ...")
-                self.__write_merge(df=df, table=table, merge_columns=merge_columns)
-                logger.info(f"Upserted Spark DataFrame records into {table}.")
+
+        if mode == "append":
+            logger.info(f"Appending Spark DataFrame records into {table} ...")
+            writer.append()
+            logger.info(f"Appended Spark DataFrame records into {table}.")
+        elif mode == "merge":
+            logger.info(f"Upserting Spark DataFrame records into {table} ...")
+            self.__write_merge(df=df, table=table, merge_columns=merge_columns)
+            logger.info(f"Upserted Spark DataFrame records into {table}.")
 
     def __write_merge(
         self, df: DataFrame, table: str, merge_columns: list | None = None
