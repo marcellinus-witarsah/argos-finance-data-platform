@@ -2,11 +2,21 @@ import datetime
 
 import chispa
 import pyspark.sql.functions as F
-from pyspark.sql.types import (DateType, StringType, StructField, StructType,
-                               TimestampType)
+from pyspark.sql.types import (
+    DateType,
+    IntegerType,
+    StringType,
+    StructField,
+    StructType,
+    TimestampType,
+)
 
-from pipelines.shared.transform import (add_load_dttm, add_load_prdt,
-                                        add_md5_hash)
+from pipelines.shared.transform import (
+    add_load_dttm,
+    add_load_prdt,
+    add_md5_hash,
+    parse_json,
+)
 
 
 class TestTransform:
@@ -21,8 +31,42 @@ class TestTransform:
             ),
         )
 
-        df = df.transform(add_md5_hash, col="json_data")
+        df = df.transform(add_md5_hash, col="json_data", target_col="md5_hash_value")
         chispa.assert_column_equality(df, "md5_hash_value", "expected_md5_hash_value")
+
+    def test_parse_json(self, spark):
+        df = spark.createDataFrame(
+            [('{"symbol": "BTC","price": 60000}', "BTC", 60000)],
+            schema=StructType(
+                [
+                    StructField("json_data", StringType(), True),
+                    StructField("symbol", StringType(), True),
+                    StructField("price", IntegerType(), True),
+                ]
+            ),
+        )
+
+        df = df.withColumn(
+            "expected_parsed_json",
+            F.struct(
+                F.col("symbol"),
+                F.col("price"),
+            ),
+        )
+
+        df = df.transform(
+            parse_json,
+            col="json_data",
+            schema=StructType(
+                [
+                    StructField("symbol", StringType(), True),
+                    StructField("price", IntegerType(), True),
+                ]
+            ),
+            target_col="parsed_json_data",
+        )
+
+        chispa.assert_column_equality(df, "parsed_json_data", "expected_parsed_json")
 
     def test_add_load_dttm(self, spark, mocker):
         FIXED_TIMESTAMP = F.lit("2026-01-01T10:00:00+00:00").cast(TimestampType())
@@ -34,7 +78,7 @@ class TestTransform:
         mocker.patch(
             "pyspark.sql.functions.current_timestamp", return_value=FIXED_TIMESTAMP
         )
-        df = df.transform(add_load_dttm)
+        df = df.transform(add_load_dttm, target_col="load_dttm")
         chispa.assert_column_equality(df, "load_dttm", "expected_load_dttm")
 
     def test_add_load_prdt(self, spark):
@@ -55,5 +99,5 @@ class TestTransform:
 
         expected_load_prdt = F.lit("2026-01-01").cast(DateType())
         df = df.withColumn("expected_load_prdt", expected_load_prdt)
-        df = df.transform(add_load_prdt, col="load_dttm")
+        df = df.transform(add_load_prdt, col="load_dttm", target_col="load_prdt")
         chispa.assert_column_equality(df, "load_prdt", "expected_load_prdt")

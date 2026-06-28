@@ -4,28 +4,19 @@ import os
 import requests
 from dotenv import load_dotenv
 from pyspark.sql.types import (
+    ArrayType,
+    IntegerType,
     StringType,
     StructField,
     StructType,
-    IntegerType,
-    ArrayType,
 )
 
-from pipelines.shared.transform import (
-    add_hash_id_column,
-    add_load_dttm_column,
-    add_load_prdt_column,
-)
-from pipelines.bronze2silver.interest_rates.transform import (
-    parse_json,
-    explode_json,
-    select_column,
-)
+from pipelines.bronze2silver.interest_rates.transform import explode_json, select_column
+from pipelines.shared.transform import add_load_dttm, add_load_prdt, parse_json
 from src.extractor.spark_dataframe_extractor import SparkDataframeExtractor
-from src.strategy.hasher.md5_hasher_strategy import MD5HasherStrategy
 from src.strategy.parser.parser_context import ParserContext
 from src.strategy.parser.yaml_parser_strategy import YAMLParserStrategy
-from src.utils.spark_session import spark
+from src.utils.spark_session import get_spark
 from src.writer.spark_dataframe_writer import SparkDataframeWriter
 
 
@@ -37,8 +28,10 @@ def get_configuration() -> dict:
 
 def run(cfg: dict):
     # Extract
-    bronze_fed_interest_rates_df = SparkDataframeExtractor.extract(
-        spark=spark, table="catalog.argos_finance_catalog.bronze.fed_interest_rates"
+    spark = get_spark()
+    spark_dataframe_extractor = SparkDataframeExtractor(spark=spark)
+    bronze_fed_interest_rates_df = spark_dataframe_extractor.extract(
+        table="argos_finance_catalog.bronze.fed_interest_rates"
     )
 
     # Transform
@@ -79,15 +72,17 @@ def run(cfg: dict):
         )
         .transform(explode_json, col="parsed_json_data")
         .transform(select_column)
-        .transform(add_load_dttm_column)
-        .transform(add_load_prdt_column)
+        .transform(add_load_dttm, target_col="load_dttm")
+        .transform(add_load_prdt, col="load_dttm", target_col="load_prdt")
         .distinct()
     )
 
+    silver_interest_rates_df.show(truncate=False)
+
     # Load
     writer_cfg = cfg.get("writer", {})
-    SparkDataframeWriter.write(
-        spark=spark,
+    spark_dataframe_writer = SparkDataframeWriter(spark=spark)
+    spark_dataframe_writer.write(
         df=silver_interest_rates_df,
         fmt=writer_cfg.get("fmt", ""),
         table=writer_cfg.get("table", ""),

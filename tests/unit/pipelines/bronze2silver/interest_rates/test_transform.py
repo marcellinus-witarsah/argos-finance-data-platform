@@ -2,48 +2,19 @@ import datetime
 
 import chispa
 import pyspark.sql.functions as F
-from pyspark.sql.types import (ArrayType, DateType, DoubleType, IntegerType,
-                               StringType, StructField, StructType)
+from pyspark.sql.types import (
+    ArrayType,
+    DateType,
+    DoubleType,
+    StringType,
+    StructField,
+    StructType,
+)
 
-from pipelines.bronze2silver.interest_rates.transform import (explode_json,
-                                                              parse_json,
-                                                              select_column)
+from pipelines.bronze2silver.interest_rates.transform import explode_json, select_column
 
 
 class TestTransform:
-    def test_parse_json(self, spark):
-        df = spark.createDataFrame(
-            [('{"symbol": "BTC","price": 60000}', "BTC", 60000)],
-            schema=StructType(
-                [
-                    StructField("json_data", StringType(), True),
-                    StructField("symbol", StringType(), True),
-                    StructField("price", IntegerType(), True),
-                ]
-            ),
-        )
-
-        df = df.withColumn(
-            "expected_parsed_json",
-            F.struct(
-                F.col("symbol"),
-                F.col("price"),
-            ),
-        )
-
-        df = df.transform(
-            parse_json,
-            col="json_data",
-            schema=StructType(
-                [
-                    StructField("symbol", StringType(), True),
-                    StructField("price", IntegerType(), True),
-                ]
-            ),
-        )
-
-        chispa.assert_column_equality(df, "parsed_json", "expected_parsed_json")
-
     def test_explode_json(self, spark):
         schema = StructType(
             [

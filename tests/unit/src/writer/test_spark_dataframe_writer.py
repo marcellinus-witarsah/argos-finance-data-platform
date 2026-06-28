@@ -1,4 +1,3 @@
-
 import pytest
 from pyspark.sql import DataFrame, DataFrameWriterV2, SparkSession
 
@@ -6,31 +5,10 @@ from src.writer.spark_dataframe_writer import SparkDataframeWriter
 
 
 class TestSparkDataframeWriter:
-    # def setUp(self):
-    #     self.mock_spark = mock.Mock(spec=SparkSession)
-    #     self.mock_df = mock.Mock(spec=DataFrame)
-
-    #     self.mock_df_writer_v2 = mock.Mock(spec=DataFrameWriterV2)
-    #     self.mock_df_writer_v2.using.return_value = self.mock_df_writer_v2
-    #     self.mock_df_writer_v2.option.return_value = self.mock_df_writer_v2
-    #     self.mock_df_writer_v2.partitionedBy.return_value = self.mock_df_writer_v2
-    #     self.mock_df_writer_v2.append.return_value = None
-    #     self.mock_df_writer_v2.create.return_value = None
-    #     self.mock_df.writeTo.return_value = self.mock_df_writer_v2
-    #     self.mock_df.createOrReplaceTempView.return_value = None
-
     def test_raises_value_error_using_incorrect_fmt_argument(self, mocker):
         """Test if it raised an error due to incorrect `fmt` argument"""
         mock_spark = mocker.Mock()
         mock_df = mocker.Mock()
-        # mock_df_writer_v2 = mocker.Mock(spec=DataFrameWriterV2)
-        # mock_df_writer_v2.using.return_value = mock_df_writer_v2
-        # mock_df_writer_v2.option.return_value = mock_df_writer_v2
-        # mock_df_writer_v2.partitionedBy.return_value = mock_df_writer_v2
-        # mock_df_writer_v2.append.return_value = None
-        # mock_df_writer_v2.create.return_value = None
-        # mock_df.writeTo.return_value = mock_df_writer_v2
-        # mock_df.createOrReplaceTempView.return_value = None
         spark_data_frame_writer = SparkDataframeWriter(spark=mock_spark)
         with pytest.raises(ValueError):
             spark_data_frame_writer.write(
@@ -128,7 +106,7 @@ class TestSparkDataframeWriter:
     # Append Function
     def test_write_function_calls_append_function(self, mocker):
         mock_spark = mocker.Mock(spec=SparkSession)
-        mock_spark.catalog.tableExists.return_value = True
+        mock_spark.catalog.tableExists.return_value = False
 
         mock_df = mocker.Mock(spec=DataFrame)
         mock_df_writer_v2 = mocker.Mock(spec=DataFrameWriterV2)
@@ -149,7 +127,7 @@ class TestSparkDataframeWriter:
 
     def test_append_function_called_with_correct_fmt_argument(self, mocker):
         mock_spark = mocker.Mock(spec=SparkSession)
-        mock_spark.catalog.tableExists.return_value = True
+        mock_spark.catalog.tableExists.return_value = False
 
         mock_df = mocker.Mock(spec=DataFrame)
         mock_df_writer_v2 = mocker.Mock(spec=DataFrameWriterV2)
@@ -172,7 +150,7 @@ class TestSparkDataframeWriter:
     def test_write_function_calls_write_merge_function(self, mocker):
         "To identify if __write_merge() function is called, we can identify if the spark sql function is called through self.mock_spark that we created"
         mock_spark = mocker.Mock(spec=SparkSession)
-        mock_spark.catalog.tableExists.return_value = True
+        mock_spark.catalog.tableExists.return_value = False
 
         mock_df = mocker.Mock(spec=DataFrame)
         mock_df_writer_v2 = mocker.Mock(spec=DataFrameWriterV2)
@@ -198,7 +176,7 @@ class TestSparkDataframeWriter:
     ):
         "To identify if __write_merge() function is called, we can identify if the spark sql function is called through self.mock_spark that we created"
         mock_spark = mocker.Mock(spec=SparkSession)
-        mock_spark.catalog.tableExists.return_value = True
+        mock_spark.catalog.tableExists.return_value = False
 
         mock_df = mocker.Mock(spec=DataFrame)
         mock_df_writer_v2 = mocker.Mock(spec=DataFrameWriterV2)
@@ -225,7 +203,7 @@ class TestSparkDataframeWriter:
 
     def test_merge_function_calls_createOrReplaceTempView_function(self, mocker):
         mock_spark = mocker.Mock(spec=SparkSession)
-        mock_spark.catalog.tableExists.return_value = True
+        mock_spark.catalog.tableExists.return_value = False
 
         mock_df = mocker.Mock(spec=DataFrame)
         mock_df_writer_v2 = mocker.Mock(spec=DataFrameWriterV2)
@@ -247,7 +225,7 @@ class TestSparkDataframeWriter:
 
     def test_merge_function_constructs_correct_sql_script(self, mocker):
         mock_spark = mocker.Mock(spec=SparkSession)
-        mock_spark.catalog.tableExists.return_value = True
+        mock_spark.catalog.tableExists.return_value = False
 
         mock_df = mocker.Mock(spec=DataFrame)
         mock_df_writer_v2 = mocker.Mock(spec=DataFrameWriterV2)

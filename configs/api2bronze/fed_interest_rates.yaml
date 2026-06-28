@@ -6,7 +6,7 @@ extractor:
   headers: ~
 transformer: ~
 writer:
-  table: catalog.argos_finance_catalog.bronze.fed_interest_rates
+  table: argos_finance_catalog.bronze.fed_interest_rates
   fmt: iceberg
   mode: merge
   merge_columns: [id]

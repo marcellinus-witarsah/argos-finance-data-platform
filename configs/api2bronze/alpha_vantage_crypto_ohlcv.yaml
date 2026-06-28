@@ -5,7 +5,7 @@ extractor:
   headers: ~
 transformer: ~
 writer:
-  table: catalog.argos_finance_catalog.bronze.alpha_vantage_crypto_ohlcv
+  table: argos_finance_catalog.bronze.alpha_vantage_crypto_ohlcv
   fmt: iceberg
   mode: merge
   merge_columns: [id]
