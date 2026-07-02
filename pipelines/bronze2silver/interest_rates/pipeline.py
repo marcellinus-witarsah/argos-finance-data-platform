@@ -77,8 +77,6 @@ def run(cfg: dict):
         .distinct()
     )
 
-    silver_interest_rates_df.show(truncate=False)
-
     # Load
     writer_cfg = cfg.get("writer", {})
     spark_dataframe_writer = SparkDataframeWriter(spark=spark)

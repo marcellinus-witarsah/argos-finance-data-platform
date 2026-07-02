@@ -66,8 +66,6 @@ class TestInterestRatesPipeline:
         spark.sql(f"DROP TABLE IF EXISTS {source_table_name}")
         source_df.writeTo(source_table_name).using("iceberg").create()
 
-        mocker.patch("src.utils.spark_session.get_spark", new=spark)
-
         mocker.patch(
             "pipelines.shared.transform.F.current_timestamp",
             return_value=F.lit(FIXED_TIMESTAMP),
