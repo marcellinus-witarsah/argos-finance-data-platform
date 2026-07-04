@@ -27,14 +27,14 @@ services:
       minio:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "chmod +x /tmp/healthcheck/healthcheck.sh && /tmp/healthcheck/healthcheck.sh"]
-      start_period: 30s   # or 90s
+      test: [ "CMD-SHELL", "chmod +x /tmp/healthcheck/healthcheck.sh && /tmp/healthcheck/healthcheck.sh" ]
+      start_period: 30s # or 90s
       interval: 10s
       timeout: 10s
       retries: 5
     networks:
       - data-lakehouse-platform-network
-      
+
   # Metastore DB: PostgreSQL
   postgres:
     platform: linux/amd64
@@ -49,7 +49,7 @@ services:
         source: postgres-data
         target: /var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d catalog_metastore_db"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d catalog_metastore_db" ]
       interval: 5s
       timeout: 60s
       retries: 5
@@ -92,7 +92,7 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
-    entrypoint: ["./scripts/init.sh", "master"]
+    entrypoint: [ "./scripts/init.sh", "master" ]
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8080" ]
       interval: 5s
@@ -119,7 +119,7 @@ services:
     depends_on:
       spark-master:
         condition: service_healthy
-    entrypoint: ["./scripts/init.sh", "worker"]
+    entrypoint: [ "./scripts/init.sh", "worker" ]
     networks:
       - data-lakehouse-platform-network
 
@@ -142,14 +142,14 @@ services:
         target: /data
     command: server /data --address :9000 --console-address ':9002'
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/ready"]
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/ready" ]
       interval: 5s
       timeout: 60s
       retries: 5
       start_period: 20s
     networks:
       - data-lakehouse-platform-network
-  
+
   minio-client:
     platform: linux/amd64
     image: "minio/mc:${MINIO_CLIENT_IMAGE_TAG}"
@@ -157,19 +157,13 @@ services:
     env_file:
       - .env
     depends_on:
-      minio: 
+      minio:
         condition: service_healthy
     entrypoint: >
-      /bin/sh -c "
-      /usr/bin/mc alias set myminio http://minio:9000 ${MINIO_ACCESS_KEY} ${MINIO_SECRET_KEY};
-      /usr/bin/mc mb myminio/iceberg --ignore-existing;
-      /usr/bin/mc mb myminio/iceberg/source --ignore-existing;
-      /usr/bin/mc mb myminio/iceberg/warehouse --ignore-existing;
-      /usr/bin/mc anonymous set public myminio/iceberg/warehouse;
-      "
+      /bin/sh -c " /usr/bin/mc alias set myminio http://minio:9000 ${MINIO_ACCESS_KEY} ${MINIO_SECRET_KEY}; /usr/bin/mc mb myminio/iceberg --ignore-existing; /usr/bin/mc mb myminio/iceberg/source --ignore-existing; /usr/bin/mc mb myminio/iceberg/warehouse --ignore-existing; /usr/bin/mc anonymous set public myminio/iceberg/warehouse; "
     networks:
       - data-lakehouse-platform-network
-    
+
   trino:
     platform: linux/amd64
     image: trinodb/trino:${TRINO_IMAGE_TAG}
@@ -193,6 +187,24 @@ services:
       timeout: 60s
       retries: 5
       start_period: 20s
+    networks:
+      - data-lakehouse-platform-network
+
+  streamlit:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: ./infrastructures/streamlit/Dockerfile
+      args:
+        PYTHON_VERSION: ${PYTHON_VERSION}
+    container_name: streamlit
+    ports:
+      - "8081:8080"
+    env_file:
+      - .env
+    depends_on:
+      spark-master:
+        condition: service_healthy
     networks:
       - data-lakehouse-platform-network
 
