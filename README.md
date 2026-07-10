@@ -9,11 +9,32 @@
 ![License](https://img.shields.io/badge/license-MIT-green)
 ---
 
-## Architecture
+## Overview
 
-<!-- LEAD WITH THIS. Reviewers decide in ~5 seconds whether you understand your own system. -->
-<!-- Use a real diagram (Mermaid renders natively on GitHub, or embed a draw.io / Excalidraw PNG). -->
-<!-- Replace the Mermaid block below, or swap for: ![Architecture](docs/architecture.png) -->
+**The problem.** <What real-world / business problem does this solve? 2-4 sentences. Frame the "why," not the tech.>
+
+**The approach.** <How you solved it, at a high level. What tradeoff you optimized for — cost, reliability, latency, or scale.>
+
+**Impact / scale.** <Quantify. Reviewers reward numbers over pipelines.>
+- Processes ~<N> rows / <N> GB per run
+- Runs <hourly / daily / on event>
+- <e.g. "Replaced a manual 4-hour reporting process" or "Cut compute cost ~30%">
+
+---
+
+## Architecture
+Data Lakehouse Architecture accounts for flexibility storing both structure and unstructured data while still maintaining data governance.
+The Data Lakehouse itself consists of:
+- MinIO: Data lake for storing all kinds of data.
+- Apache Gravtition: Data catalog for navigating through the data inside data lake.
+- Iceberg: Open table format for enabling files to be treated as a table.
+- Spark: Distributed compute engine for general data processing.
+- Trino: Distributed query engine for quering data in efficiently.
+
+Data design pattern that is used is Medallion Architecture that organizes data into three stages:
+- Bronze: landing zone for source system data as is.
+- Silver: standardized and cleaned data.
+- Gold: aggregated, join, or denormalized according to dashboard needs.
 
 ```mermaid
 ---
@@ -45,20 +66,7 @@ flowchart LR
 1. Data comes from API: Alpha Vantage API for daily trades data and FRED® API for the FED interest rates data. Then, it is stored in JSON string format inside Bronze Layer
 2. From Bronze Layer, data will be transformed and standardized, then later is stored inside Silver Layer.
 3. From Silver Layer, data will be joined and denormalized before it is stored inside Gold Layer.
-4. From Gold Layer, data will be queried using Trino and displayed inside a Streamlit Web Application. 
-
----
-
-## Overview
-
-**The problem.** <What real-world / business problem does this solve? 2-4 sentences. Frame the "why," not the tech.>
-
-**The approach.** <How you solved it, at a high level. What tradeoff you optimized for — cost, reliability, latency, or scale.>
-
-**Impact / scale.** <Quantify. Reviewers reward numbers over pipelines.>
-- Processes ~<N> rows / <N> GB per run
-- Runs <hourly / daily / on event>
-- <e.g. "Replaced a manual 4-hour reporting process" or "Cut compute cost ~30%">
+4. From Gold Layer, data will be queried using Trino and displayed inside a Streamlit Web Application Dashboard. 
 
 ---
 
@@ -80,7 +88,6 @@ flowchart LR
 | Infra / DevOps                 | Docker, GitHub Actions     |
 | Testing                        | pytest                     |
 
-
 ---
 
 ## Features
@@ -91,6 +98,27 @@ flowchart LR
 - <e.g. Alerting / logging / monitoring>
 - <e.g. Fully containerized — runs locally with one command>
 
+---
+
+## Testing
+The pipelines were developed using Test Driven Approach. The test suite covers:
+- Integration Testing
+  - ETL data pipelines (table writing validation, schema validation, ETL output validation).
+- Unit Testing
+  - API GET function.
+  - PySpark table extraction logic.
+  - PySpark table transformation logic.
+  - PySpark table writing logic.
+  - Other custom functions.
+
+Run tests: 
+```bash
+pytest tests/
+```
+Coverage:
+```bash
+pytest --cov=src tests/
+```
 ---
 
 ## Getting Started
