@@ -86,7 +86,7 @@ flowchart LR
 | Data Quality                   | _Not Yet Implemented_      |
 | Serving / BI                   | Streamlit                  |
 | Infra / DevOps                 | Docker, GitHub Actions     |
-| Testing                        | pytest                     |
+| Testing                        | Pytest                     |
 
 ---
 
@@ -133,25 +133,55 @@ git clone [https://github.com/<user>/<repo>.git](https://github.com/marcellinus-
 cd argos-finance-data-platform
 
 # 2. Configure environment
-cp .env.example .env      # then fill in credentials
+cp .env.example .env      # then fill in credentials (API keys)
 
 # 3. Spin up the data lakehouse infrastructures
 docker compose up -d
 
-# 4. Run the pipeline
-<To be Filled>
+# 4. Go inside the Master/ Driver node
+docker exec -it spark-master bash
+
+# 5. Run the pipeline (Run these one by one)
+# API to bronze layer
+python pipelines/api2bronze/alpha_vantage_crypto_ohlcv/pipeline.py --symbol BTC --market USD
+python pipelines/api2bronze/fed_interest_rates/pipeline.py
+# Bronze to silver layer
+python pipelines/bronze2silver/crypto_ohclv/pipeline.py
+python pipelines/bronze2silver/interest_rates/pipeline.py
+# Silver to gold layer
+python pipelines/silver2gold/bitcoin_ohlcv_vs_fed_interest_rates/pipeline.py
+
 ```
 
 ### Sample output
 <!-- For pipelines with no live service, show proof it works: a sample output file, a screenshot of the DAG, or a log snippet. -->
 <e.g. "See `docs/sample_output.csv`" or paste a short run log.>
+## api2bronze-alpha_vantage_crypto_ohlcv_pipeline
+![api2bronze-alpha_vantage_crypto_ohlcv_pipeline](assets/api2bronze-alpha_vantage_crypto_ohlcv_pipeline.png)
+![api2bronze-alpha_vantage_crypto_ohlcv_table](assets/api2bronze-alpha_vantage_crypto_ohlcv_table.png)
+
+## api2bronze-fed_interest_rates_pipeline
+![api2bronze-fed_interest_rates_pipeline](assets/api2bronze-fed_interest_rates_pipeline.png)
+![api2bronze-fed_interest_rates_table](assets/api2bronze-fed_interest_rates_table.png)
+
+## bronze2silver-crypto_ohlcv_pipeline
+![bronze2silver-crypto_ohlcv_pipeline](assets/bronze2silver-crypto_ohlcv_pipeline.png)
+![bronze2silver-crypto_ohlcv_table](assets/bronze2silver-crypto_ohlcv_table.png)
+
+## bronze2silver-interest_rates_pipeline
+![bronze2silver-interest_rates_pipeline](assets/bronze2silver-interest_rates_pipeline.png)
+![bronze2silver-interest_rates_table](assets/bronze2silver-interest_rates_table.png)
+
+## silver2gold-bitcoin_ohlcv_vs_fed_interest_rates_pipeline
+![silver2gold-bitcoin_ohlcv_vs_fed_interest_rates_pipeline](assets/silver2gold-bitcoin_ohlcv_vs_fed_interest_rates_pipeline.png)
+![silver2gold-bitcoin_ohlcv_vs_fed_interest_rates_table](assets/silver2gold-bitcoin_ohlcv_vs_fed_interest_rates_table.png)
 
 ---
 
 ## Screenshots / Demo
 
 <!-- Visual proof carries weight. Add a dashboard screenshot, a DAG graph, or a GIF. Include a live link if hosted. -->
-![Dashboard](docs/dashboard.png)
+![Dashboard](assets/streamlit_web_app_dashboard.png)
 
 ---
 
@@ -165,6 +195,7 @@ argos-finance-data-platform/
 ├── scripts            # Shell scripts for infrastructure set up
 ├── src                # Reausable class and function for supporting data pipelines
 ├── tests              # Unit testing & integration testing
+├── env.example        # Example environment variablescan 
 ├── app.py             # Streamlit web script
 ├── docker-compose.yaml     
 ├── README.md
