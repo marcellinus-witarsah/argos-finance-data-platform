@@ -5,7 +5,6 @@ from plotly.subplots import make_subplots
 from trino.dbapi import connect
 
 from src.extractor.trino_extractor import TrinoExtractor
-from src.utils.spark_session import get_spark
 
 # Establish the connection
 trino_extractor = TrinoExtractor(
@@ -48,6 +47,7 @@ if not data.empty:
             close=data["close"],
             increasing_line_color="green",
             decreasing_line_color="red",
+            name=data["ticker"].unique().tolist()[0]
         )
     )
 
@@ -56,7 +56,7 @@ if not data.empty:
             x=data.index,
             y=data["rate"],
             mode="lines",
-            name="lines",
+            name="Interest Rates"
         ),
         secondary_y=True,
     )

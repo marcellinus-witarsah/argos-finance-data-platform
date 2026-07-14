@@ -25,7 +25,6 @@ def run(cfg: dict):
     bronze_alpha_vantage_crypto_ohlcv_df = spark_dataframe_extractor.extract(
         table="argos_finance_catalog.bronze.alpha_vantage_crypto_ohlcv",
     )
-    bronze_alpha_vantage_crypto_ohlcv_df.show()
 
     # Transform
     schema = StructType(
@@ -72,7 +71,6 @@ def run(cfg: dict):
         .transform(add_load_prdt, col="load_dttm", target_col="load_prdt")
         .distinct()
     )
-    silver_crypto_ohlcv_df.show(truncate=False)
 
     # Load
     writer_cfg = cfg.get("writer", {})
