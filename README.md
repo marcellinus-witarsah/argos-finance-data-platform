@@ -124,7 +124,8 @@ pytest --cov=src tests/
 ## Getting Started
 
 ### Prerequisites
-- <Docker & Docker Compose / Python 3.11 / cloud account, etc.>
+- Docker
+- Python 3.10.11
 
 ### Setup
 ```bash
