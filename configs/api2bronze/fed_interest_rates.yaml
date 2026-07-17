@@ -1,0 +1,12 @@
+extractor:
+  url: "https://api.stlouisfed.org/fred/series/observations"
+  query_params:
+    series_id: "FEDFUNDS"
+    file_type: "json"
+  headers: ~
+transformer: ~
+writer:
+  table: argos_finance_catalog.bronze.fed_interest_rates
+  fmt: iceberg
+  mode: merge
+  merge_columns: [id]

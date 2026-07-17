@@ -1,0 +1,7 @@
+extractor: ~
+transformer: ~
+writer:
+  table: argos_finance_catalog.silver.interest_rates
+  fmt: iceberg
+  mode: merge
+  merge_columns: [date]

@@ -1,0 +1,124 @@
+import datetime
+import hashlib
+import json
+
+import chispa
+import pyspark.sql.functions as F
+from pyspark.sql.types import (
+    DateType,
+    StringType,
+    StructField,
+    StructType,
+    TimestampType,
+)
+
+from pipelines.api2bronze.alpha_vantage_crypto_ohlcv.pipeline import run
+
+SAMPLE_RESPONSE = {
+    "Meta Data": {
+        "1. Information": "Daily Prices and Volumes for Digital Currency",
+        "2. Digital Currency Code": "BTC",
+        "3. Digital Currency Name": "Bitcoin",
+        "4. Market Code": "USD",
+        "5. Last Refreshed": "2024-01-02",
+        "6. Time Zone": "UTC",
+    },
+    "Time Series (Digital Currency Daily)": {
+        "2024-01-02": {
+            "1a. open (USD)": "42000.00",
+            "2a. high (USD)": "43500.00",
+            "3a. low (USD)": "41800.00",
+            "4a. close (USD)": "43200.00",
+            "5. volume": "15234.56",
+            "6. market cap (USD)": "15234.56",
+        },
+        "2024-01-01": {
+            "1a. open (USD)": "40000.00",
+            "2a. high (USD)": "40000.00",
+            "3a. low (USD)": "40000.00",
+            "4a. close (USD)": "40000.00",
+            "5. volume": "23234.56",
+            "6. market cap (USD)": "12234.56",
+        },
+    },
+}
+
+SAMPLE_CFG = {
+    "extractor": {
+        "url": "https://www.alphavantage.co/query",
+        "query_params": {
+            "function": "DIGITAL_CURRENCY_DAILY",
+            "market": "USD",
+            "symbol": "BTC",
+            "apikey": "alpha_vantage_api_key",
+        },
+        "headers": None,
+    },
+    "transformer": None,
+    "writer": {
+        "table": "argos_finance_catalog.bronze.alpha_vantage_crypto_ohlcv",
+        "fmt": "iceberg",
+        "mode": "merge",
+        "merge_columns": ["id"],
+    },
+}
+
+
+class TestAlphaVantageCryptoOHLCVPipeline:
+    def test_run_writes_to_spark_table(self, spark, mocker):
+        mock_response = mocker.Mock()
+        mock_response.json.return_value = SAMPLE_RESPONSE
+        mock_response.raise_for_status.return_value = None
+        mocker.patch("requests.Session.get", return_value=mock_response)
+
+        mocker.patch("src.utils.spark_session.get_spark", new=spark)
+
+        FIXED_TIMESTAMP = datetime.datetime(2026, 1, 1, 10, 0, 0)
+        FIXED_DATE = datetime.date(2026, 1, 1)
+
+        mocker.patch(
+            "pipelines.shared.transform.F.current_timestamp",
+            return_value=F.lit(FIXED_TIMESTAMP),
+        )
+        mocker.patch(
+            "pipelines.shared.transform.F.to_date", return_value=F.lit(FIXED_DATE)
+        )
+
+        # Expected Dataframe
+        expected_df = spark.createDataFrame(
+            [
+                (
+                    json.dumps(SAMPLE_RESPONSE),
+                    hashlib.md5(
+                        json.dumps(SAMPLE_RESPONSE).encode("utf-8")
+                    ).hexdigest(),
+                    FIXED_TIMESTAMP,
+                    FIXED_DATE,
+                ),
+            ],
+            schema=StructType(
+                [
+                    StructField("json_data", StringType(), True),
+                    StructField("id", StringType(), True),
+                    StructField("load_dttm", TimestampType(), True),
+                    StructField("load_prdt", DateType(), True),
+                ]
+            ),
+        )
+        table_name = "argos_finance_catalog.bronze.alpha_vantage_crypto_ohlcv"
+
+        run(cfg=SAMPLE_CFG)
+
+        result_df = spark.read.table(table_name)
+
+        assert result_df.count() == 1
+
+        chispa.dataframe_comparer.assert_schema_equality(
+            expected_df.schema, result_df.schema, ignore_nullable=True
+        )
+
+        chispa.dataframe_comparer.assert_df_equality(
+            expected_df, result_df, ignore_nullable=True, ignore_row_order=True
+        )
+
+        spark.sql(f"DROP TABLE IF EXISTS {table_name}")
