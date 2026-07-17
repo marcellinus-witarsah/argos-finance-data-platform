@@ -1,6 +1,6 @@
 # Argos Finance Data Platform
 
-> An end-to-end ETL pipeline that ingests daily trades and FED interest rates data, transforms it with PySpark, and serves a Streamlit web application dashboard.
+> An end-to-end ETL pipeline that ingests daily trades and Fed interest rate data, transforms it with PySpark, and serves a Streamlit web application dashboard.
 
 <!-- Optional badges: build status, license, tools. Recruiters like the polish. -->
 ![Python](https://img.shields.io/badge/python-3.10.11-blue)
@@ -11,30 +11,27 @@
 
 ## Overview
 
-**The problem.** <What real-world / business problem does this solve? 2-4 sentences. Frame the "why," not the tech.>
+The idea behind this project is pretty simple: pull in crypto price data and FED interest rate data, run it through a proper pipeline, and land it on a dashboard where a trader or investor can see price action next to the macro picture without juggling five different tabs. Rates move markets, so having both in one place instead of eyeballing them separately felt like a small but real win.
 
-**The approach.** <How you solved it, at a high level. What tradeoff you optimized for — cost, reliability, latency, or scale.>
+To be honest, there are other dashboards and tools that already do this. This isn't me trying to out-build them — I wanted to build, and learn more in depth, how end-to-end data solutions are put together using a tech stack I'm familiar with.
 
-**Impact / scale.** <Quantify. Reviewers reward numbers over pipelines.>
-- Processes ~<N> rows / <N> GB per run
-- Runs <hourly / daily / on event>
-- <e.g. "Replaced a manual 4-hour reporting process" or "Cut compute cost ~30%">
+I built a data lakehouse myself, with medallion architecture, Iceberg tables, Spark for compute, and Trino for querying, rather than just reading about how it's supposed to work. So this is as much a "let me learn this stack for real" project as it is a finance tool.
 
 ---
 
 ## Architecture
-Data Lakehouse Architecture accounts for flexibility storing both structure and unstructured data while still maintaining data governance.
+Data Lakehouse Architecture allows flexibility in storing both structured and unstructured data while still maintaining data governance.
 The Data Lakehouse itself consists of:
 - MinIO: Data lake for storing all kinds of data.
-- Apache Gravtition: Data catalog for navigating through the data inside data lake.
+- Apache Gravitino: Data catalog for navigating through the data inside the data lake.
 - Iceberg: Open table format for enabling files to be treated as a table.
 - Spark: Distributed compute engine for general data processing.
-- Trino: Distributed query engine for quering data in efficiently.
+- Trino: Distributed query engine for querying data efficiently.
 
-Data design pattern that is used is Medallion Architecture that organizes data into three stages:
+The data design pattern used is Medallion Architecture, which organizes data into three stages:
 - Bronze: landing zone for source system data as is.
 - Silver: standardized and cleaned data.
-- Gold: aggregated, join, or denormalized according to dashboard needs.
+- Gold: aggregated, joined, or denormalized according to dashboard needs.
 
 ```mermaid
 ---
@@ -62,11 +59,11 @@ flowchart LR
     T --> F["Serving<br/>Streamlit"]
 ```
 
-**Data flow:** 
-1. Data comes from API: Alpha Vantage API for daily trades data and FRED® API for the FED interest rates data. Then, it is stored in JSON string format inside Bronze Layer
-2. From Bronze Layer, data will be transformed and standardized, then later is stored inside Silver Layer.
-3. From Silver Layer, data will be joined and denormalized before it is stored inside Gold Layer.
-4. From Gold Layer, data will be queried using Trino and displayed inside a Streamlit Web Application Dashboard. 
+**Data flow:**
+1. Data comes from an API: Alpha Vantage API for daily trades data and FRED® API for Fed interest rate data. It is then stored in JSON string format inside the Bronze Layer.
+2. From the Bronze Layer, data is transformed and standardized, then stored in the Silver Layer.
+3. From the Silver Layer, data is joined and denormalized before being stored in the Gold Layer.
+4. From the Gold Layer, data is queried using Trino and displayed in the Streamlit web application dashboard.
 
 ---
 
@@ -80,7 +77,7 @@ flowchart LR
 | Storage                        | MinIO                      |
 | Data Catalog                   | Apache Gravitino           |
 | Metadata Storage               | PostgreSQL                 |
-| Dsitributed Compute Engine     | Apache Spark               |
+| Distributed Compute Engine     | Apache Spark               |
 | Distributed SQL Compute        | Trino                      |
 | Orchestration                  | _Not Yet Implemented_      |
 | Data Quality                   | _Not Yet Implemented_      |
@@ -101,7 +98,7 @@ flowchart LR
 ---
 
 ## Testing
-The pipelines were developed using Test Driven Approach. The test suite covers:
+The pipelines were developed using a Test-Driven Approach. The test suite covers:
 - Integration Testing
   - ETL data pipelines (table writing validation, schema validation, ETL output validation).
 - Unit Testing
@@ -111,7 +108,7 @@ The pipelines were developed using Test Driven Approach. The test suite covers:
   - PySpark table writing logic.
   - Other custom functions.
 
-Run tests: 
+Run tests:
 ```bash
 pytest tests/
 ```
@@ -139,7 +136,7 @@ cp .env.example .env      # then fill in credentials (API keys)
 # 3. Spin up the data lakehouse infrastructures
 docker compose up -d
 
-# 4. Go inside the Master/ Driver node
+# 4. Go inside the Master/Driver node
 docker exec -it spark-master bash
 
 # 5. Run the pipeline (Run these one by one)
@@ -192,11 +189,11 @@ python pipelines/silver2gold/bitcoin_ohlcv_vs_fed_interest_rates/pipeline.py
 argos-finance-data-platform/
 ├── configs            # Configurations for pipeline runs
 ├── infrastructures    # Data lakehouse infrastructures
-├── pipelines          # Data pipelines for bronze, silver, and gold layer
-├── scripts            # Shell scripts for infrastructure set up
-├── src                # Reausable class and function for supporting data pipelines
+├── pipelines          # Data pipelines for bronze, silver, and gold layers
+├── scripts            # Shell scripts for infrastructure setup
+├── src                # Reusable classes and functions for supporting data pipelines
 ├── tests              # Unit testing & integration testing
-├── env.example        # Example environment variablescan 
+├── env.example        # Example environment variables
 ├── app.py             # Streamlit web script
 ├── docker-compose.yaml     
 ├── README.md
@@ -208,16 +205,14 @@ argos-finance-data-platform/
 
 ## Results & Learnings
 
-- **Results:** <metrics, performance numbers, what the output looks like>
-- **What I learned:** <a design decision or tradeoff — signals engineering maturity>
-- **What I'd improve next:** <shows self-awareness; good interview fodder>
+- **Results:** A single web application dashboard that displays Bitcoin OHLCV data alongside Fed interest rates.
+- **What I learned:**
+  - Each component needed to run a **Data Lakehouse**.
+  - How **Medallion Architecture** works — how the bronze, silver, and gold layers fit together.
+  - How to implement Test-Driven Development (**unit** and **integration testing**) for building data pipelines and other functions.
+- **What I'd improve next:**
+  - Add more macro financial data, like Money Supply (M2), Gross Domestic Product (GDP), Consumer Price Index (CPI), etc.
+  - Add an orchestrator for scheduling data pipelines and running them in a specific order. One example would be Apache Airflow.
+  - Implement data quality scoring on all incoming data across the bronze, silver, and gold layers.
 
 <!-- Optional: "Update 2026: migrated to Delta Lake for reliability" — signals continuous learning. -->
-
----
-
-## License & Contact
-
-Licensed under the MIT License — see [LICENSE](LICENSE).
-
-**<Your Name>** · [LinkedIn](<url>) · [Portfolio](<url>) · <email>
