@@ -12,24 +12,3 @@ cp ./packages/aws-java-sdk-bundle-${AWS_JAVA_SDK_BUNDLE_JAR_VERSION}.jar /root/s
 # =======================================================================
 envsubst < /tmp/conf/spark-defaults.conf.template > ${SPARK_HOME}/conf/spark-defaults.conf
 envsubst < /tmp/conf/core-site.xml.template > ${SPARK_HOME}/conf/core-site.xml
-
-# # =======================================================================
-# # Create metalake and catalog in Gravitino
-# # =======================================================================
-chmod u+x /tmp/scripts/create_metalake_and_catalog.sh
-/tmp/scripts/create_metalake_and_catalog.sh
-
-# Run spark based on the workload type
-SPARK_WORKLOAD=$1
-echo "SPARK_WORKLOAD: $SPARK_WORKLOAD"
-
-if [ "$SPARK_WORKLOAD" == "master" ]; then
-    start-master.sh -p 7077 
-elif [ "$SPARK_WORKLOAD" == "worker" ]; then
-    start-worker.sh spark://spark-master:7077
-elif [ "$SPARK_WORKLOAD" == "history" ]; then
-    start-history-server.sh
-else
-    echo "Unknown workload: $SPARK_WORKLOAD"
-    exit 1
-fi
