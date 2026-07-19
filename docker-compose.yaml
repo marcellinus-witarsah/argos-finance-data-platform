@@ -150,6 +150,7 @@ services:
   # ============================================================================
 
   airflow-postgres:
+    container_name: airflow-postgres
     image: postgres:16
     environment:
       POSTGRES_USER: airflow
@@ -169,6 +170,7 @@ services:
   airflow-redis:
     # Redis is limited to 7.2-bookworm due to licencing change
     # https://redis.io/blog/redis-adopts-dual-source-available-licensing/
+    container_name: airflow-redis
     image: redis:7.2-bookworm
     expose:
       - 6379
@@ -184,6 +186,7 @@ services:
 
   airflow-apiserver:
     <<: *airflow-common
+    container_name: airflow-apiserver
     command: api-server
     ports:
       - "8081:8080"
@@ -201,6 +204,7 @@ services:
 
   airflow-scheduler:
     <<: *airflow-common
+    container_name: airflow-scheduler
     command: scheduler
     healthcheck:
       test: [ "CMD-SHELL", 'airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}"' ]
@@ -216,6 +220,7 @@ services:
 
   airflow-dag-processor:
     <<: *airflow-common
+    container_name: airflow-dag-processor
     command: dag-processor
     healthcheck:
       test: [ "CMD-SHELL", 'airflow jobs check --job-type DagProcessorJob --hostname "$${HOSTNAME}"' ]
@@ -231,6 +236,7 @@ services:
 
   airflow-worker:
     <<: *airflow-spark-common
+    container_name: airflow-worker
     command: celery worker
     healthcheck:
       # yamllint disable rule:line-length
@@ -256,13 +262,14 @@ services:
     volumes:
       - type: bind
         source: ./
-        target: /root/spark/apps
+        target: /opt/spark/apps
       - type: volume
         source: airflow-spark-events-volume
         target: /opt/spark/spark-events
 
   airflow-triggerer:
     <<: *airflow-common
+    container_name: airflow-triggerer
     command: triggerer
     healthcheck:
       test: [ "CMD-SHELL", 'airflow jobs check --job-type TriggererJob --hostname "$${HOSTNAME}"' ]
@@ -278,6 +285,7 @@ services:
 
   airflow-init:
     <<: *airflow-common
+    container_name: airflow-init
     entrypoint: /bin/bash
     # yamllint disable rule:line-length
     command:
@@ -370,6 +378,7 @@ services:
 
   airflow-cli:
     <<: *airflow-common
+    container_name: airflow-cli
     profiles:
       - debug
     environment:
@@ -388,6 +397,7 @@ services:
   # See: https://docs.docker.com/compose/profiles/
   flower:
     <<: *airflow-common
+    container_name: flower
     command: celery flower
     profiles:
       - flower

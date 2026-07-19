@@ -8,7 +8,7 @@
 # =======================================================================
 # Prepare target directory for packages
 # =======================================================================
-target_dir="/root/spark"
+target_dir="/opt/spark"
 if [[ ! -d "${target_dir}/packages" ]]; then
   mkdir -p "${target_dir}/packages"
 fi

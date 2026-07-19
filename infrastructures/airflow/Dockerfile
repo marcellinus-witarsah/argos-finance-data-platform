@@ -24,7 +24,7 @@ FROM spark-base AS spark
 # =======================================================================
 ARG SPARK_VERSION
 # RUN echo $SPARK_VERSION
-ENV SPARK_HOME="/root/spark"
+ENV SPARK_HOME="/opt/spark"
 RUN mkdir -p ${SPARK_HOME}
 WORKDIR ${SPARK_HOME}
 
@@ -63,7 +63,7 @@ RUN ./scripts/dependency.sh
 FROM spark-deps AS spark-python
 # Install python dependencies
 COPY ./infrastructures/airflow/requirements.txt .
-RUN pip3 install -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
 
 # =======================================================================
 # Set Environment Variables for Spark 
@@ -95,3 +95,38 @@ ARG AWS_JAVA_SDK_BUNDLE_JAR_VERSION
 
 RUN chmod u+x ./scripts/init.sh
 RUN ./scripts/init.sh
+
+# =======================================================================
+# Create the Spark event-log dir in the image (empty) so that when
+# docker-compose mounts a fresh named volume over it, Docker's volume
+# "copy-up" initializes the volume from this directory - inheriting its
+# ownership/permissions instead of defaulting to root:root.
+# =======================================================================
+RUN mkdir -p ${SPARK_HOME}/spark-events
+
+# # =======================================================================
+# # Containers run as a non-root UID with GID 0 (see docker-compose
+# # "user: ${AIRFLOW_UID:-50000}:0"), so force group ownership to 0 before
+# # mirroring owner perms onto the group. The Spark tarball's extracted
+# # files can end up owned by a build-time UID/GID that isn't 0 (varies by
+# # builder), so chmod g=u alone isn't enough - the group itself must be
+# # gid 0 for the runtime entrypoint to be able to write ${SPARK_HOME}/conf/*
+# # =======================================================================
+RUN chgrp -R 0 ${SPARK_HOME} && chmod -R g=u ${SPARK_HOME}
+
+# =======================================================================
+# Runtime entrypoint: renders Spark config templates with the actual
+# runtime environment, then hands off to Airflow's own entrypoint
+# =======================================================================
+RUN chmod u+x ./scripts/entrypoint.sh
+
+# =======================================================================
+# Drop back to the non-root airflow user (UID 50000, GID 0) so the image's
+# own default matches docker-compose's "user: ${AIRFLOW_UID:-50000}:0".
+# Without this, any container/exec started without an explicit -u flag
+# runs as root and leaves root-owned files under ${SPARK_HOME}/conf,
+# which then permanently block later non-root runs from rewriting them.
+# =======================================================================
+USER airflow
+
+ENTRYPOINT [ "./scripts/entrypoint.sh" ]
