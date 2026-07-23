@@ -4,8 +4,8 @@ FROM python:${PYTHON_VERSION}-bullseye AS spark-base
 
 WORKDIR /web-app
 
-COPY /requirements.txt /web-app/requirements.txt
-RUN pip install -r /web-app/requirements.txt
+COPY ./infrastructures/streamlit/requirements.txt /web-app/requirements.txt
+RUN pip install --no-cache-dir -r /web-app/requirements.txt
 
 COPY /src /web-app/src
 COPY /app.py /web-app/app.py

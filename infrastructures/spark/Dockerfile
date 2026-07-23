@@ -1,6 +1,6 @@
 # Install Image with Python Version 3.10.11
 ARG PYTHON_VERSION
-FROM python:${PYTHON_VERSION}-bullseye AS spark-base
+FROM python:${PYTHON_VERSION}-slim AS spark-base
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -11,11 +11,11 @@ RUN apt-get update && \
     unzip \
     rsync \
     software-properties-common \
-    openjdk-11-jdk \
+    openjdk-17-jre-headless \
     build-essential \
     ssh && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/*do
+    rm -rf /var/lib/apt/lists/*
 
 FROM spark-base AS spark
 
@@ -73,8 +73,8 @@ ARG AWS_JAVA_SDK_BUNDLE_JAR_VERSION
 
 FROM spark-deps AS spark-python
 # Install python dependencies
-COPY ./requirements.txt .
-RUN pip3 install -r requirements.txt
+COPY ./infrastructures/spark/requirements.txt .
+RUN pip3 install --no-cache-dir -r requirements.txt
 
 # =======================================================================
 # Set Environment Variables for Spark 
