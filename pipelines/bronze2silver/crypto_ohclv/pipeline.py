@@ -1,3 +1,6 @@
+import argparse
+from typing import Sequence
+
 from dotenv import load_dotenv
 from pyspark.sql.types import MapType, StringType, StructField, StructType
 
@@ -10,9 +13,15 @@ from src.utils.spark_session import get_spark
 from src.writer.spark_dataframe_writer import SparkDataframeWriter
 
 
-def get_configuration() -> dict:
+def get_parameters(argv: None | Sequence = None):
+    parser = argparse.ArgumentParser(description="Run the silver data pipeline.")
+    parser.add_argument("--conf-yaml-file", type=str, required=True)
+    return parser.parse_args(argv)
+
+
+def get_configuration(conf_yaml_file: str) -> dict:
     yaml_parser = ParserContext(YAMLParserStrategy())
-    cfg = yaml_parser.parse("./configs/bronze2silver/crypto_ohlcv.yaml")
+    cfg = yaml_parser.parse(conf_yaml_file)
     return cfg
 
 
@@ -87,7 +96,8 @@ def run(cfg: dict):
 
 def main():
     load_dotenv()
-    cfg = get_configuration()
+    parameters = get_parameters()
+    cfg = get_configuration(conf_yaml_file=parameters.conf_yaml_file)
     run(cfg=cfg)
 
 

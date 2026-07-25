@@ -1,3 +1,6 @@
+import argparse
+from typing import Sequence
+
 import pyspark.sql.functions as F
 from dotenv import load_dotenv
 
@@ -12,11 +15,15 @@ from src.utils.spark_session import get_spark
 from src.writer.spark_dataframe_writer import SparkDataframeWriter
 
 
-def get_configuration() -> dict:
+def get_parameters(argv: None | Sequence = None):
+    parser = argparse.ArgumentParser(description="Run the gold data pipeline.")
+    parser.add_argument("--conf-yaml-file", type=str, required=True)
+    return parser.parse_args(argv)
+
+
+def get_configuration(conf_yaml_file: str) -> dict:
     yaml_parser = ParserContext(YAMLParserStrategy())
-    cfg = yaml_parser.parse(
-        "./configs/silver2gold/bitcoin_ohlcv_vs_fed_interest_rates.yaml"
-    )
+    cfg = yaml_parser.parse(conf_yaml_file)
     return cfg
 
 
@@ -69,7 +76,8 @@ def run(cfg: dict):
 
 def main():
     load_dotenv()
-    cfg = get_configuration()
+    parameters = get_parameters()
+    cfg = get_configuration(conf_yaml_file=parameters.conf_yaml_file)
     run(cfg=cfg)
 
 

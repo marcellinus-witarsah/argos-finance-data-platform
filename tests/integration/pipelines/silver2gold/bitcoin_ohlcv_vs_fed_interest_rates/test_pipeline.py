@@ -1,6 +1,7 @@
 import datetime
 
 import chispa
+import pyspark.sql.functions as F
 from pyspark.sql.types import (
     DateType,
     DoubleType,
@@ -9,7 +10,7 @@ from pyspark.sql.types import (
     StructType,
     TimestampType,
 )
-import pyspark.sql.functions as F
+
 from pipelines.silver2gold.bitcoin_ohlcv_vs_fed_interest_rates.pipeline import run
 
 SAMPLE_CFG = {
@@ -28,8 +29,6 @@ class TestBitcoinOHLCVVSFedInterestRatesPipeline:
     def test_run_writes_to_spark_table(self, spark, mocker):
         FIXED_TIMESTAMP = datetime.datetime(2024, 1, 2, 7, 0, 0)
         FIXED_DATE = datetime.date(2024, 1, 2)
-
-        
 
         silver_crypto_ohlcv_df = spark.createDataFrame(
             data=[
@@ -157,7 +156,9 @@ class TestBitcoinOHLCVVSFedInterestRatesPipeline:
 
         run(cfg=SAMPLE_CFG)
 
-        df = spark.read.table("argos_finance_catalog.gold.bitcoin_ohlcv_vs_fed_interest_rates")
+        df = spark.read.table(
+            "argos_finance_catalog.gold.bitcoin_ohlcv_vs_fed_interest_rates"
+        )
 
         assert expected_df.count() == df.count()
 
