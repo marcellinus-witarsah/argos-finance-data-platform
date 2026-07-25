@@ -10,10 +10,21 @@ from pipelines.api2bronze.alpha_vantage_crypto_ohlcv.pipeline import (
 
 class TestPipeline:
     def test_get_parameters_via_arguments_return_correct_results(self):
-        argv = ["--symbol", "BTC", "--market", "USD"]
+        argv = [
+            "--conf-yaml-file",
+            "./configs/api2bronze/alpha_vantage_crypto_ohlcv.yaml",
+            "--symbol",
+            "BTC",
+            "--market",
+            "USD",
+        ]
 
         parameters = get_parameters(argv=argv)
 
+        assert (
+            parameters.conf_yaml_file
+            == "./configs/api2bronze/alpha_vantage_crypto_ohlcv.yaml"
+        )
         assert parameters.symbol == "BTC"
         assert parameters.market == "USD"
 
@@ -21,11 +32,23 @@ class TestPipeline:
         # Simulate cli input
         monkeypatch.setattr(
             "sys.argv",
-            ["pipeline.py", "--symbol", "BTC", "--market", "USD"],
+            [
+                "pipeline.py",
+                "--conf-yaml-file",
+                "./configs/api2bronze/alpha_vantage_crypto_ohlcv.yaml",
+                "--symbol",
+                "BTC",
+                "--market",
+                "USD",
+            ],
         )
 
         parameters = get_parameters()
 
+        assert (
+            parameters.conf_yaml_file
+            == "./configs/api2bronze/alpha_vantage_crypto_ohlcv.yaml"
+        )
         assert parameters.symbol == "BTC"
         assert parameters.market == "USD"
 

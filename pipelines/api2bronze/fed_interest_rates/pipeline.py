@@ -1,5 +1,7 @@
+import argparse
 import json
 import os
+from typing import Sequence
 
 import requests
 from dotenv import load_dotenv
@@ -11,6 +13,12 @@ from src.strategy.parser.parser_context import ParserContext
 from src.strategy.parser.yaml_parser_strategy import YAMLParserStrategy
 from src.utils.spark_session import get_spark
 from src.writer.spark_dataframe_writer import SparkDataframeWriter
+
+
+def get_parameters(argv: None | Sequence = None):
+    parser = argparse.ArgumentParser(description="Run the bronze data pipeline.")
+    parser.add_argument("--conf-yaml-file", type=str, required=True)
+    return parser.parse_args(argv)
 
 
 def get_configuration(cfg: dict, env: dict) -> dict:
@@ -68,9 +76,12 @@ def main():
     # Load environment variables
     load_dotenv()
 
+    # Get pipeline parameters
+    parameters = get_parameters()
+
     # Read YAML file
     yaml_parser = ParserContext(YAMLParserStrategy())
-    cfg = yaml_parser.parse("./configs/api2bronze/fed_interest_rates.yaml")
+    cfg = yaml_parser.parse(parameters.conf_yaml_file)
 
     # Get configuration
     cfg = get_configuration(cfg=cfg, env=os.environ)

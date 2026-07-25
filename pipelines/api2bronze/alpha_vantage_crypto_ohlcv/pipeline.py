@@ -17,6 +17,7 @@ from src.writer.spark_dataframe_writer import SparkDataframeWriter
 
 def get_parameters(argv: None | Sequence = None):
     parser = argparse.ArgumentParser(description="Run the bronze data pipeline.")
+    parser.add_argument("--conf-yaml-file", type=str, required=True)
     parser.add_argument("--symbol", type=str, required=True)
     parser.add_argument("--market", type=str, required=True)
     return parser.parse_args(argv)
@@ -89,7 +90,7 @@ def main():
 
     # Read YAML file
     yaml_parser = ParserContext(YAMLParserStrategy())
-    cfg = yaml_parser.parse("./configs/api2bronze/alpha_vantage_crypto_ohlcv.yaml")
+    cfg = yaml_parser.parse(parameters.conf_yaml_file)
 
     # Get pipeline configuration
     cfg = get_configuration(parameters=parameters, cfg=cfg, env=os.environ)

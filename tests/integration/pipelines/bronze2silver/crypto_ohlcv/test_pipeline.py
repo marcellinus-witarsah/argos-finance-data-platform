@@ -1,3 +1,4 @@
+import argparse
 import datetime
 import json
 
@@ -47,6 +48,13 @@ class TestCryptoOHLCVPipeline:
 
     def test_run_writes_to_spark_table(self, spark, mocker):
         source_table_name = "argos_finance_catalog.bronze.alpha_vantage_crypto_ohlcv"
+
+        mocker.patch(
+            "pipelines.bronze2silver.crypto_ohclv.pipeline.get_parameters",
+            return_value=argparse.Namespace(
+                conf_yaml_file="./configs/bronze2silver/crypto_ohlcv.yaml"
+            ),
+        )
 
         FIXED_TIMESTAMP = datetime.datetime(2024, 1, 2, 7, 0, 0)
         FIXED_DATE = datetime.date(2024, 1, 2)
