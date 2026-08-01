@@ -35,6 +35,8 @@ The data design pattern used is Medallion Architecture, which organizes data int
 - Silver: standardized and cleaned data.
 - Gold: aggregated, joined, or denormalized according to dashboard needs.
 
+For orchestration, I will be using Apache Airflow, **but this requires high resources usage. Right now planning to find other alternatives.**
+
 ```mermaid
 ---
 config:
@@ -45,15 +47,17 @@ flowchart LR
     A["Source: API <br/>Alpha Vantage API<br/>FRED® API"] --> S["Distributed Compute Engine <br/>(Apache Spark)"]
 
     subgraph H["Data Lakehouse Platform"]
-        S -. ingests and transform .-> G
-        subgraph G["Medallion Architecture"]
-            C["Raw Layer<br/>(MinIO & Apache Iceberg)"]
-            D["Silver Layer<br/>(MinIO & Apache Iceberg)"]
-            E["Gold Layer<br/>(MinIO & Apache Iceberg)"]
-            C --> D --> E
+        subgraph N["Orchestration (Airflow)"]
+            S -. ingests and transform .-> G
+            subgraph G["Medallion Architecture"]
+                C["Raw Layer<br/>(MinIO & Apache Iceberg)"]
+                D["Silver Layer<br/>(MinIO & Apache Iceberg)"]
+                E["Gold Layer<br/>(MinIO & Apache Iceberg)"]
+                C --> D --> E
+            end
+            S -. interacts with metadata .-> M["Metadata Catalog<br/>(Apache Gravitino)"]
+            G -. manages metadata .-> M
         end
-        S -. interacts with metadata .-> M["Metadata Catalog<br/>(Apache Gravitino)"]
-        G -. manages metadata .-> M
         M -. provides metadata to .-> T["SQL Distributed Compute<br/>(Trino)"]
         G -. queries .-> T
     end
@@ -81,7 +85,7 @@ flowchart LR
 | Metadata Storage               | PostgreSQL                 |
 | Distributed Compute Engine     | Apache Spark               |
 | Distributed SQL Compute        | Trino                      |
-| Orchestration                  | _Not Yet Implemented_      |
+| Orchestration                  | Apache Airflow             |
 | Data Quality                   | _Not Yet Implemented_      |
 | Serving / BI                   | Streamlit                  |
 | Infra / DevOps                 | Docker, GitHub Actions     |
@@ -91,11 +95,10 @@ flowchart LR
 
 ## Features
 
-- <Key capability 1 — tie to an outcome, not just a feature>
-- <e.g. Incremental loads with idempotent, re-runnable tasks>
-- <e.g. Automated data-quality checks that fail the pipeline on bad data>
-- <e.g. Alerting / logging / monitoring>
-- <e.g. Fully containerized — runs locally with one command>
+- Idempontent Batch Pipelines.
+- Automatically Unit and Integration Tested Pipeline during Merge Request to Repository.
+- Modular Code Design.
+- Containerized Infrastructure.
 
 ---
 
@@ -113,10 +116,6 @@ The pipelines were developed using a Test-Driven Approach. The test suite covers
 Run tests:
 ```bash
 pytest tests/
-```
-Coverage:
-```bash
-pytest --cov=src tests/
 ```
 ---
 
@@ -214,7 +213,6 @@ argos-finance-data-platform/
   - How to implement Test-Driven Development (**unit** and **integration testing**) for building data pipelines and other functions.
 - **What I'd improve next:**
   - Add more macro financial data, like Money Supply (M2), Gross Domestic Product (GDP), Consumer Price Index (CPI), etc.
-  - Add an orchestrator for scheduling data pipelines and running them in a specific order. One example would be Apache Airflow.
   - Implement data quality scoring on all incoming data across the bronze, silver, and gold layers.
 
 <!-- Optional: "Update 2026: migrated to Delta Lake for reliability" — signals continuous learning. -->
