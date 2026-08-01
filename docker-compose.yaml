@@ -85,7 +85,7 @@ x-airflow-common:
   volumes:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
-    - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
+    - ${AIRFLOW_PROJ_DIR:-.}/configs/airflow:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
     - ${AIRFLOW_PROJ_DIR:-.}/:/opt/spark/apps
     - airflow-spark-events-volume:/opt/spark/spark-events
@@ -94,7 +94,7 @@ x-airflow-common:
     airflow-postgres:
       condition: service_healthy
   networks: &airflow-common-networks
-    - data-lakehouse-platform-network
+    - argos-network
 
 services:
   # ============================================================================
@@ -117,7 +117,7 @@ services:
       start_period: 5s
     restart: always
     networks:
-      - data-lakehouse-platform-network
+      *airflow-common-networks
 
   airflow-apiserver:
     <<: *airflow-common
@@ -194,7 +194,7 @@ services:
       - -c
       - |
         if [[ -z "${AIRFLOW_UID}" ]]; then
-          echo
+          echo 
           echo -e "\033[1;33mWARNING!!!: AIRFLOW_UID not set!\e[0m"
           echo "If you are on Linux, you SHOULD follow the instructions below to set "
           echo "AIRFLOW_UID environment variable, otherwise files will be owned by root."
@@ -331,7 +331,7 @@ services:
       timeout: 10s
       retries: 5
     networks:
-      - data-lakehouse-platform-network
+      - argos-network
 
   # Metastore DB: PostgreSQL
   metastore-db-postgres:
@@ -353,7 +353,7 @@ services:
       retries: 5
       start_period: 20s
     networks:
-      - data-lakehouse-platform-network
+      - argos-network
 
   # Distributed Compute Engine: Apache Spark
   spark-master:
@@ -398,7 +398,7 @@ services:
       retries: 5
       start_period: 20s
     networks:
-      - data-lakehouse-platform-network
+      - argos-network
 
   spark-worker:
     platform: linux/amd64
@@ -419,7 +419,7 @@ services:
         condition: service_healthy
     entrypoint: [ "./scripts/init.sh", "worker" ]
     networks:
-      - data-lakehouse-platform-network
+      - argos-network
 
   # Object Storage: MinIO
   minio:
@@ -446,7 +446,7 @@ services:
       retries: 5
       start_period: 20s
     networks:
-      - data-lakehouse-platform-network
+      - argos-network
 
   minio-client:
     platform: linux/amd64
@@ -460,7 +460,7 @@ services:
     entrypoint: >
       /bin/sh -c " /usr/bin/mc alias set myminio http://minio:9000 ${MINIO_ACCESS_KEY} ${MINIO_SECRET_KEY}; /usr/bin/mc mb myminio/iceberg --ignore-existing; /usr/bin/mc mb myminio/iceberg/source --ignore-existing; /usr/bin/mc mb myminio/iceberg/warehouse --ignore-existing; /usr/bin/mc anonymous set public myminio/iceberg/warehouse; "
     networks:
-      - data-lakehouse-platform-network
+      - argos-network
 
   trino:
     platform: linux/amd64
@@ -486,7 +486,7 @@ services:
       retries: 5
       start_period: 20s
     networks:
-      - data-lakehouse-platform-network
+      - argos-network
 
   streamlit:
     platform: linux/amd64
@@ -504,7 +504,7 @@ services:
       spark-master:
         condition: service_healthy
     networks:
-      - data-lakehouse-platform-network
+      - argos-network
 
 volumes:
   gravitino-volume:
@@ -515,4 +515,4 @@ volumes:
   airflow-postgres-db-volume:
 
 networks:
-  data-lakehouse-platform-network:
+  argos-network:

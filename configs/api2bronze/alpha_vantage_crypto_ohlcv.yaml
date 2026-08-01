@@ -9,4 +9,3 @@ writer:
   fmt: iceberg
   mode: merge
   merge_columns: [id]
-

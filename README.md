@@ -214,7 +214,7 @@ argos-finance-data-platform/
   - How to implement Test-Driven Development (**unit** and **integration testing**) for building data pipelines and other functions.
 - **What I'd improve next:**
   - Add more macro financial data, like Money Supply (M2), Gross Domestic Product (GDP), Consumer Price Index (CPI), etc.
-  - Add an orchestrator for scheduling data pipelines and running them in a specific order. One example would be Apache Airflow.
+  - Add an orchestrator for scheduling data pipelines and running them in a specific order. One example would be Apache Airflow. 
   - Implement data quality scoring on all incoming data across the bronze, silver, and gold layers.
 
 <!-- Optional: "Update 2026: migrated to Delta Lake for reliability" — signals continuous learning. -->
