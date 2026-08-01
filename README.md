@@ -1,6 +1,8 @@
 # Argos Finance Data Platform
-
 > An end-to-end ETL pipeline that ingests daily trades and Fed interest rate data, transforms it with PySpark, and serves a Streamlit web application dashboard.
+
+## Disclaimer!
+**The purpose of this project is for me how I implement data lakehouse and medallion architecture. Some of this tools are meant for large scale of data processing not a typical MVP. If this is something I want to deploy as MVP, I would choose other tool options that is simple and lean.**
 
 <!-- Optional badges: build status, license, tools. Recruiters like the polish. -->
 ![Python](https://img.shields.io/badge/python-3.10.11-blue)
