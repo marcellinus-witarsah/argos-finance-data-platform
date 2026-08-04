@@ -1,0 +1,21 @@
+services:
+  # ============================================================================
+  # Web Application
+  # ============================================================================
+  streamlit:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: ./infrastructures/streamlit/Dockerfile
+      args:
+        PYTHON_VERSION: ${PYTHON_VERSION}
+    container_name: streamlit
+    ports:
+      - "8082:8080"
+    env_file:
+      - .env
+    networks:
+      - argos-network
+
+networks:
+  argos-network:

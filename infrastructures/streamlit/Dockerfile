@@ -4,7 +4,7 @@ FROM python:${PYTHON_VERSION}-slim AS spark-base
 
 WORKDIR /web-app
 
-COPY ./infrastructures/streamlit/requirements.txt /web-app/requirements.txt
+COPY ./infrastructures/web_app/streamlit/requirements.txt /web-app/requirements.txt
 RUN pip install --no-cache-dir -r /web-app/requirements.txt
 
 COPY /src /web-app/src

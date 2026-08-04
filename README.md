@@ -142,13 +142,15 @@ docker exec -it spark-master bash
 
 # 5. Run the pipeline (Run these one by one)
 # API to bronze layer
-python pipelines/api2bronze/alpha_vantage_crypto_ohlcv/pipeline.py --symbol BTC --market USD
-python pipelines/api2bronze/fed_interest_rates/pipeline.py
+python pipelines/api2bronze/alpha_vantage_crypto_ohlcv/pipeline.py --conf-yaml-file configs/api2bronze/alpha_vantage_crypto_ohlcv.yaml --symbol BTC --market USD
+python pipelines/api2bronze/fed_interest_rates/pipeline.py --conf-yaml-file configs/api2bronze/fed_interest_rates.yaml
+
 # Bronze to silver layer
-python pipelines/bronze2silver/crypto_ohclv/pipeline.py
-python pipelines/bronze2silver/interest_rates/pipeline.py
+python pipelines/bronze2silver/crypto_ohclv/pipeline.py --conf-yaml-file configs/bronze2silver/crypto_ohlcv.yaml
+python pipelines/bronze2silver/interest_rates/pipeline.py --conf-yaml-file configs/bronze2silver/interest_rates.yaml
+
 # Silver to gold layer
-python pipelines/silver2gold/bitcoin_ohlcv_vs_fed_interest_rates/pipeline.py
+python pipelines/silver2gold/bitcoin_ohlcv_vs_fed_interest_rates/pipeline.py --conf-yaml-file configs/silver2gold/bitcoin_ohlcv_vs_fed_interest_rates.yaml 
 
 ```
 
