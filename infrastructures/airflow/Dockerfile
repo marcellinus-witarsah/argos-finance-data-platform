@@ -43,10 +43,10 @@ FROM spark AS spark-deps
 COPY ./scripts/ /tmp/scripts/
 
 # Spark initialization scripts
-COPY ./infrastructures/airflow/scripts/ ./scripts/
+COPY ./infrastructures/orchestration/airflow/scripts/ ./scripts/
 
 # Spark Configuration files
-COPY ./infrastructures/airflow/conf /tmp/conf
+COPY ./infrastructures/orchestration/airflow/conf /tmp/conf
 
 # =======================================================================
 # Install Spark Dependencies
@@ -62,7 +62,7 @@ RUN ./scripts/dependency.sh
 
 FROM spark-deps AS spark-python
 # Install python dependencies
-COPY ./infrastructures/airflow/requirements.txt .
+COPY ./infrastructures/orchestration/airflow/requirements.txt .
 RUN pip3 install --no-cache-dir -r requirements.txt
 
 # =======================================================================

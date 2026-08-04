@@ -14,10 +14,10 @@ ARG AWS_JAVA_SDK_BUNDLE_JAR_VERSION
 FROM gravitino-base AS gravitino
 
 # Copy configuration files
-COPY ./infrastructures/gravitino/conf /tmp/conf
+COPY ./infrastructures/data_lakehouse/gravitino/conf /tmp/conf
 
 # Copy Gravitino initialization scripts
-COPY ./infrastructures/gravitino/scripts/ ./scripts/
+COPY ./infrastructures/data_lakehouse/gravitino/scripts/ ./scripts/
 
 # Copy common initialization scripts
 COPY ./scripts/ /tmp/scripts/

@@ -50,10 +50,10 @@ FROM spark AS spark-deps
 COPY ./scripts/ /tmp/scripts/
 
 # Spark initialization scripts
-COPY ./infrastructures/spark/scripts/ ./scripts/
+COPY ./infrastructures/data_lakehouse/spark/scripts/ ./scripts/
 
 # Spark Configuration files
-COPY ./infrastructures/spark/conf /tmp/conf
+COPY ./infrastructures/data_lakehouse/spark/conf /tmp/conf
 
 # =======================================================================
 # Install Spark Dependencies 
@@ -73,7 +73,7 @@ ARG AWS_JAVA_SDK_BUNDLE_JAR_VERSION
 
 FROM spark-deps AS spark-python
 # Install python dependencies
-COPY ./infrastructures/spark/requirements.txt .
+COPY ./infrastructures/data_lakehouse/spark/requirements.txt .
 RUN pip3 install --no-cache-dir -r requirements.txt
 
 # =======================================================================
